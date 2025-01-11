@@ -63,6 +63,10 @@ document.addEventListener('DOMContentLoaded', loadCSVFromGitHub);
    WRITING RESULTS TO GOOGLE SHEETS
 -------------------------------------------------- */
 
+function handleClientLoad() {
+  gapi.load('client:auth2', initClient);
+}
+
 function initClient() {
   gapi.client.init({
     apiKey: 'AIzaSyDQAfQqd0amONt3fEXg7stS1lvbQhD7OWA',
