@@ -78,8 +78,6 @@ function initClient() {
   });
 }
 
-gapi.load('client:auth2', initClient);
-
 function writePollResultsToSheet() {
   const results = [["Movie ID", "Votes"]];
   for (const [movieID, voteCount] of Object.entries(votes)) {
@@ -461,3 +459,7 @@ function saveFinalTop5Order() {
   writePollResultsToSheet();
   closePopup();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  handleClientLoad();
+});
