@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Library Films – First Movie Night Poll</title>
+
+  <!-- Example fallback for demonstration if you don't have Proxima Nova licensed -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600&display=swap" />
+
+  <style>
+    /* ----------------------------------------------------------
+       GLOBAL & FONT (Scaled Up ~30%)
+    ---------------------------------------------------------- */
+    html {
+      font-size: 130%; /* Scale base font size by ~30% */
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+      color: #333;
+      font-family: 'Proxima Nova', 'Source Sans Pro', sans-serif;
+    }
+    h1, h2, h3, h4, h5 {
+      margin: 0;
+      font-weight: 600;
+    }
+    a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    button {
+      font-family: inherit;
+      padding: 10px 16px; /* slightly larger padding */
+      border: none;
+      background: #007BFF;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.3s;
+      font-size: 1rem; /* bigger text in buttons */
+    }
+    button:hover {
+      background: #005bbf;
+    }
+
+    /* ----------------------------------------------------------
+       HEADER / LOGO
+    ---------------------------------------------------------- */
+    .header {
+      text-align: center;
+      padding: 20px 0 0 0; /* bigger padding */
+      background: #fff;
+    }
+    .header img {
+      max-width: 390px; /* scaled up ~30% from 300px */
+      height: auto;
+    }
+    .header h2 {
+      margin-top: 10px;
+      font-size: 1.4rem; /* bigger than 1.2rem */
+      color: #555;
+    }
+
+    /* ----------------------------------------------------------
+       CSV UPLOAD
+    ---------------------------------------------------------- */
+    #csvSection {
+      text-align: center;
+      padding: 15px;
+      font-size: 1rem;
+    }
+
+    /* ----------------------------------------------------------
+       START PAGE
+    ---------------------------------------------------------- */
+    #startPage {
+      text-align: center;
+      padding: 50px 20px; /* bigger padding */
+    }
+    #startPage h2 {
+      font-size: 2.3rem; /* scaled up from 2rem */
+      margin-bottom: 15px;
+    }
+    #instructionImage {
+      max-width: 520px; /* bigger placeholder */
+      margin: 30px auto;
+      display: block;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+    }
+    #startPage p {
+      font-size: 1.4rem; /* bigger text */
+      line-height: 1.6;
+      max-width: 900px; /* wider to accommodate bigger text */
+      margin: 20px auto;
+      color: #444;
+    }
+
+    /* ----------------------------------------------------------
+       MOVIE CONTAINER (KOTH) – scaled up
+    ---------------------------------------------------------- */
+    .movie-container {
+      display: none;
+      justify-content: center;
+      align-items: flex-start;
+      margin: 30px; /* bigger margin */
+      gap: 30px;
+    }
+    .movie {
+      position: relative;
+      width: 280px; /* scaled up from 220px */
+      background: #fff;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .movie:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      border-color: #007BFF;
+    }
+    .poster {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .details {
+      padding: 15px; /* bigger padding */
+    }
+    .details h3 {
+      font-size: 1.2rem;
+      margin: 0 0 8px 0;
+    }
+
+    /* HOVER BUTTONS ON POSTER */
+    .poster-container {
+      position: relative;
+      overflow: hidden;
+    }
+    .hover-buttons {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: rgba(0,0,0,0.6);
+      opacity: 0;
+      transition: opacity 0.3s;
+      padding: 5px;
+    }
+    .movie:hover .hover-buttons {
+      opacity: 1;
+    }
+    .hover-buttons a {
+      background: #007BFF;
+      color: #fff;
+      padding: 6px 10px;
+      text-decoration: none;
+      border-radius: 3px;
+      font-size: 1rem;
+    }
+
+    /* MATCH COUNTER */
+    #matchCounter {
+      text-align: center;
+      font-size: 1.3rem;
+      color: #333;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    /* ----------------------------------------------------------
+       SIDEBAR RANKINGS (ON THE LEFT) – hidden further left
+    ---------------------------------------------------------- */
+    #toggleSidebarBtn {
+      display: none; 
+      position: absolute;
+      left: 30px;
+      top: 30px;
+      z-index: 10;
+      font-size: 1rem;
+    }
+    #sidebar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: -400px; /* was -300, move it further to fully hide */
+      width: 350px; /* scaled up from 300px */
+      background: #fff;
+      border-right: 2px solid #ccc;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      padding: 20px;
+      transition: left 0.4s;
+      z-index: 999;
+      overflow-y: auto;
+    }
+    #sidebar.open {
+      left: 0;
+    }
+    #sidebar h3 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+    #sidebar ul {
+      padding-left: 25px;
+      font-size: 1.1rem;
+    }
+    #hideSidebarBtn {
+      margin-bottom: 10px;
+      background: #cc0000; 
+    }
+
+    /* ----------------------------------------------------------
+       OVERLAY & POPUP FOR FACE-OFF & DND
+    ---------------------------------------------------------- */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 10000;
+    }
+    .overlay.active {
+      display: block;
+    }
+    .popup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 550px; /* bigger from 450 */
+      max-width: 95vw;
+      background: #fff;
+      border-radius: 6px;
+      padding: 30px; /* bigger padding */
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    /* DRAG & DROP LIST – scaled up fonts */
+    #top5List {
+      list-style-type: none;
+      padding: 0;
+      margin: 20px 0;
+      font-size: 1.1rem;
+    }
+    #top5List li {
+      background: #f9f9f9;
+      margin: 8px 0;
+      padding: 14px;
+      border: 2px solid #ccc;
+      cursor: move;
+      transition: background 0.2s;
+    }
+    #top5List li.drag-over {
+      border-color: #007BFF;
+      background: #e0f1ff;
+    }
+    #top5List li.dragging {
+      opacity: 0.2;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER / LOGO -->
+  <div class="header">
+    <img src="LIBRARY FILMS 1 LINE v01_BLACK.png" alt="Library Films" />
+    <h2>First Movie Night Poll</h2>
+  </div>
+
+  <!-- CSV Section -->
+  <div id="csvSection">
+    <p style="margin:8px 0; font-size:1.1rem;">
+      <strong>Load CSV for Testing:</strong> 
+      <input type="file" id="csvInput" accept=".csv" onchange="loadCSV(event)" />
+    </p>
+  </div>
+
+  <!-- START PAGE -->
+  <div id="startPage">
+    <h2>Welcome to the King of the Hill Movie Poll!</h2>
+    <img id="instructionImage" src="https://via.placeholder.com/520x320?text=Placeholder+Instructions" 
+         alt="Instruction Placeholder" />
+    <p>
+      In this poll, you’ll see two movies face off. Click the one you prefer.<br/>
+      The winner remains champion, and a new challenger will appear next.<br/>
+      Continue until all challengers have faced the champion.
+    </p>
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <!-- MATCH COUNTER -->
+  <div id="matchCounter"></div>
+
+  <!-- MOVIE CONTAINER (KOTH) -->
+  <div class="movie-container">
+    <div class="movie" id="champion" onclick="voteChampion()"></div>
+    <div class="movie" id="challenger" onclick="voteChallenger()"></div>
+  </div>
+
+  <!-- BUTTON TO TOGGLE SIDEBAR (ON THE LEFT) -->
+  <button id="toggleSidebarBtn" onclick="toggleSidebar()">Show Current Rankings</button>
+  
+  <!-- SIDEBAR FOR LIVE RANKINGS -->
+  <div id="sidebar">
+    <button id="hideSidebarBtn" onclick="toggleSidebar()">Hide</button>
+    <h3>Current Rankings</h3>
+    <ul id="rankingList"></ul>
+  </div>
+
+  <!-- The overlay + popup for face-off & final DnD -->
+  <div class="overlay" id="popupOverlay">
+    <div class="popup" id="popupContent">
+      <!-- We'll dynamically fill this with face-off or top5 DnD -->
+    </div>
+  </div>
+
+  <!-- Papa Parse (CSV parsing) + main script -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
