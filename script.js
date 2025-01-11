@@ -57,9 +57,7 @@ function loadCSVFromGitHub() {
   });
 }
 
-// Call the function to load CSV on page load
 document.addEventListener('DOMContentLoaded', loadCSVFromGitHub);
-
 /**
  * Load CSV (via file input).
  */
