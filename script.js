@@ -74,7 +74,6 @@ function initClient() {
   });
 }
 
-<script src="https://apis.google.com/js/api.js"></script>
 gapi.load('client:auth2', initClient);
 
 function writePollResultsToSheet() {
