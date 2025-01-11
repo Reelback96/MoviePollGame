@@ -25,7 +25,7 @@ let sidebarOpen = false;
  */
 
 function loadCSVFromGitHub() {
-  const url = 'https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/Reelback96/MoviePollGame/gh-pages/movie_list.csv';
+  const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv';
   
   Papa.parse(url, {
     download: true,
