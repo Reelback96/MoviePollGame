@@ -25,7 +25,7 @@ let sidebarOpen = false;
  */
 
 function loadCSVFromGitHub() {
-  const url = 'https://raw.githubusercontent.com/Reelback96/MoviePollGame/87acbb4c6ebb361dcc08342a6ea1b0b596f0174a/movie_list.csv';
+  const url = 'https://raw.githubusercontent.com/Reelback96/MoviePollGame/11d60035f60d4ff69fbbe513d5e7bea61c8b65a3/movie_list.csv';
   
   Papa.parse(url, {
     download: true,
