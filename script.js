@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', loadCSVFromGitHub);
 /* --------------------------------------------------
    WRITING RESULTS TO GOOGLE SHEETS
 -------------------------------------------------- */
+<script src="https://apis.google.com/js/api.js"></script>
 
 function initClient() {
   gapi.client.init({
