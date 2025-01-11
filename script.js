@@ -21,16 +21,14 @@ let dragStartIndex = null;
 let sidebarOpen = false;
 
 /**
- * Load CSV (via file input).
+ * Load CSV (from GitHub).
  */
-function loadCSV(event) {
-  const file = event.target.files[0];
-  if (!file) {
-    alert("No file selected!");
-    return;
-  }
 
-  Papa.parse(file, {
+function loadCSVFromGitHub() {
+  const url = 'https://raw.githubusercontent.com/Reelback96/MoviePollGame/gh-pages/movie_list.csv';
+  
+  Papa.parse(url, {
+    download: true,
     header: true,
     skipEmptyLines: true,
     complete: function(results) {
@@ -58,6 +56,48 @@ function loadCSV(event) {
     }
   });
 }
+
+// Call the function to load CSV on page load
+document.addEventListener('DOMContentLoaded', loadCSVFromGitHub);
+
+/**
+ * Load CSV (via file input).
+ */
+/* function loadCSV(event) {
+   const file = event.target.files[0];
+   if (!file) {
+     alert("No file selected!");
+     return;
+   }
+
+   Papa.parse(file, {
+     header: true,
+     skipEmptyLines: true,
+     complete: function(results) {
+       movies = results.data;
+       movies.forEach((movie, idx) => {
+         if (!movie.ID) movie.ID = String(idx);
+         votes[movie.ID] = 0;
+       });
+
+      // Shuffle
+       shuffledMovies = [...movies];
+       for (let i = shuffledMovies.length - 1; i > 0; i--) {
+         const j = Math.floor(Math.random() * (i + 1));
+         [shuffledMovies[i], shuffledMovies[j]] = [shuffledMovies[j], shuffledMovies[i]];
+       }
+
+       champion = shuffledMovies[0] || null;
+       challengerIndex = 1;
+
+       console.log("CSV loaded, ready to start!");
+     },
+     error: function(err) {
+       console.error("Papa Parse error:", err);
+       alert("Failed to read the CSV. Check console for details.");
+     }
+   });
+ }*/
 
 /* --------------------------------------------------
    STARTING THE GAME
