@@ -59,6 +59,46 @@ function loadCSVFromGitHub() {
 
 document.addEventListener('DOMContentLoaded', loadCSVFromGitHub);
 
+/* --------------------------------------------------
+   WRITING RESULTS TO GOOGLE SHEETS
+-------------------------------------------------- */
+
+function initClient() {
+  gapi.client.init({
+    apiKey: 'AIzaSyDQAfQqd0amONt3fEXg7stS1lvbQhD7OWA',
+    clientId: '866522257651-645mjjbmugbiqoerc8m7ve4ear4fuec8.apps.googleusercontent.com',
+    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+    scope: "https://www.googleapis.com/auth/spreadsheets"
+  }).then(function () {
+    gapi.auth2.getAuthInstance().signIn();
+  });
+}
+
+gapi.load('client:auth2', initClient);
+
+function writePollResultsToSheet() {
+  const results = [["Movie ID", "Votes"]];
+  for (const [movieID, voteCount] of Object.entries(votes)) {
+    results.push([movieID, voteCount]);
+  }
+  const params = {
+    spreadsheetId: '1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww',
+    range: 'Sheet1!A1',
+    valueInputOption: 'RAW',
+  };
+
+  const valueRangeBody = {
+    "majorDimension": "ROWS",
+    "values": results
+  };
+
+  gapi.client.sheets.spreadsheets.values.update(params, valueRangeBody).then((response) => {
+    console.log(response.result);
+  }).catch((error) => {
+    console.error("Error writing to the sheet:", error);
+  });
+}
+
 /**
  * Load CSV (via file input).
  */
@@ -324,7 +364,7 @@ function top5DndHTML() {
   return `
     <h3>Your Top 5 (Drag & Drop to Reorder)</h3>
     <ul id="top5List"></ul>
-    <button onclick="saveFinalTop5Order()">Save My Preferences</button>
+    <button onclick="saveFinalTop5Order()">Submit my Top 5</button>
   `;
 }
 
@@ -413,6 +453,7 @@ function handleDrop(e) {
 
 function saveFinalTop5Order() {
   console.log("Final Top 5 Order:", top5Movies);
-  alert("Your final Top 5 order is saved! Check console for details.");
+  alert("Your final Top 5 order is saved!");
+  writePollResultsToSheet();
   closePopup();
 }
