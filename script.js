@@ -30,12 +30,23 @@ let sidebarOpen = false;
 
 function loadCSVFromGoogle() {
   const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv';
-  
+
+  const loadingPopup = document.getElementById('loadingPopupOverlay');
+  loadingPopup.classList.add('active');
+
+  const startTime = Date.now();
+
   Papa.parse(url, {
     download: true,
     header: true,
     skipEmptyLines: true,
     complete: function(results) {
+      loadingPopup.classList.remove('active');
+      const endTime = Date.now();
+      if (endTime - startTime < 1000) { // Hide popup if loading too fast
+        loadingPopup.style.display = 'none';
+      }
+
       // "results.data" is your CSV as an array of objects
       movies = results.data;
 
@@ -59,6 +70,7 @@ function loadCSVFromGoogle() {
       console.log("CSV loaded, ready to start!");
     },
     error: function(err) {
+      loadingPopup.classList.remove('active');
       console.error("Papa Parse error:", err);
       alert("Failed to read the CSV. Check console for details.");
     }
