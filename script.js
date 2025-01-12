@@ -170,6 +170,12 @@ function updateMatchCounter() {
   const matchesLeft = (shuffledMovies.length - challengerIndex);
   document.getElementById("matchCounter").textContent = 
     `Matches left: ${matchesLeft} of ${totalMatches}`;
+
+     // Apply alignment class only on mobile
+  if (window.innerWidth <= 600) {
+     const matchesLeft = (shuffledMovies.length - challengerIndex);
+     document.getElementById("matchCounter").textContent = `${matchesLeft}`;
+   }
 }
 
 /* --------------------------------------------------
