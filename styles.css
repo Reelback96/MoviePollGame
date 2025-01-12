@@ -1,4 +1,3 @@
-<style>
   /* ----------------------------------------------------------
      GLOBAL & FONT (Scaled Up ~30%)
   ---------------------------------------------------------- */
@@ -252,4 +251,30 @@
     opacity: 0.2;
   }
 
-</style>
+  /* FACE-OFF CONTAINER */
+  .faceoff-container {
+    display: flex;
+    gap: 20px;
+  }
+  
+  /* If you want champion/challenger to have pointer cursor */
+  .face-off-champion, .face-off-challenger {
+    cursor: pointer;
+  }  
+
+  /* ----------------------------------------------------------
+     LOADING POPUP OVERLAY
+  ---------------------------------------------------------- */
+
+  /* 1) LOADING POPUP STYLES (centered, bigger font, normal style) */
+#loadingPopupOverlay .popup {
+  text-align: center;    /* center the text */
+  font-size: 1.4rem;     /* bigger text */
+  font-style: normal;    /* ensure not italic */
+  /* you can also add e.g. font-weight: 600 if you want it bold */
+}
+
+#loadingPopupOverlay .popup p {
+  margin: 0 auto;
+  /* Not strictly necessary, but ensures p is centered if you have special layouts */
+}

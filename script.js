@@ -29,7 +29,8 @@ let sidebarOpen = false;
  */
 
 function loadCSVFromGoogle() {
-  const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv';
+  return new Promise((resolve, reject) => {
+    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv';
 
   const loadingPopup = document.getElementById('loadingPopupOverlay');
   loadingPopup.classList.add('active');
@@ -54,8 +55,8 @@ function loadCSVFromGoogle() {
       // Assign IDs if missing, init votes to 0
       movies.forEach((movie, idx) => {
         if (!movie.ID) movie.ID = String(idx);
-        votes[movie.ID] = 0;
-      });
+          votes[movie.ID] = 0;
+        });
 
       // Shuffle the array into "shuffledMovies"
       shuffledMovies = [...movies];
@@ -69,34 +70,30 @@ function loadCSVFromGoogle() {
       challengerIndex = 1;
 
       console.log("CSV loaded, ready to start!");
-    },
-    error: function(err) {
-      loadingPopup.classList.remove('active');
-      console.error("Papa Parse error:", err);
-      alert("Failed to read the CSV. Check console for details.");
-    }
+        // The parse finished successfully => resolve
+        resolve();
+      },
+      error: function(err) {
+        loadingPopup.classList.remove('active');
+        console.error("Papa Parse error:", err);
+        alert("Failed to read the CSV. Check console for details.");
+
+        // The parse failed => reject
+        reject(err);
+      }
+    });
   });
 }
 
-// When DOM is ready, automatically load the CSV
+/* // When DOM is ready, automatically load the CSV
 document.addEventListener('DOMContentLoaded', function() {
   loadCSVFromGoogle();
-});
+}); */
 
 /* --------------------------------------------------
    WRITING RESULTS TO GOOGLE SHEETS
    (Using Google API client, not Apps Script .gs)
 -------------------------------------------------- */
-
-// If you want to use the Google Sheets API via gapi client, 
-// you must do handleClientLoad -> initClient -> sign in -> then write.
-
-/*
-function handleClientLoad() {
-  // This is called once <script src="https://apis.google.com/js/api.js" onload="handleClientLoad()"> loads
-  gapi.load('client:auth2', initClient);
-}
-*/
 
 function initClient() {
   // Initialize the Sheets API
@@ -232,27 +229,18 @@ function movieCardHTML(movie) {
   const rtLink = movie["Rotten Tomatoes"] || "#";
   const posterSrc = posterPath(movie);
 
-  // Build the HTML with classes for each link
   return `
     <div class="poster-container">
       <img 
-        class="poster" 
-        src="${posterSrc}" 
-        onerror="this.onerror=null; this.src='posters/default.jpg';" 
+        class="poster"
+        src="${posterSrc}"
+        data-fallback="posters/default.jpg"
       />
       <div class="hover-buttons">
-        <a 
-          href="${trailerLink}" 
-          class="trailer-link" 
-          target="_blank"
-        >
+        <a href="${trailerLink}" class="trailer-link" target="_blank">
           Watch Trailer
         </a>
-        <a 
-          href="${rtLink}" 
-          class="rt-link" 
-          target="_blank"
-        >
+        <a href="${rtLink}" class="rt-link" target="_blank">
           Rotten Tomatoes
         </a>
       </div>
@@ -375,11 +363,11 @@ function faceOffHTML() {
   return `
     <h3>Final Face-off: Champion vs. #5</h3>
     <p>Select which one should enter the Top 5!</p>
-    <div class="movie-container" style="display:flex; gap:20px;">
-      <div class="movie face-off-champion" style="cursor:pointer;">
+    <div class="movie-container faceoff-container">
+      <div class="movie face-off-champion">
         ${movieCardHTML(finalChamp)}
       </div>
-      <div class="movie face-off-challenger" style="cursor:pointer;">
+      <div class="movie face-off-challenger">
         ${movieCardHTML(finalFifth)}
       </div>
     </div>
@@ -505,12 +493,3 @@ function saveFinalTop5Order() {
   writePollResultsToSheet();
   closePopup();
 }
-
-/**
- * If you want to handle loading the Google API after DOM load:
- */
-document.addEventListener('DOMContentLoaded', function() {
-  // If you want auto-auth, you can do:
-  // handleClientLoad(); // if your handleClientLoad() is uncommented
-  // Or do nothing if you only call it manually
-});
