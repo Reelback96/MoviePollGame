@@ -42,11 +42,11 @@ function loadCSVFromGoogle() {
     skipEmptyLines: true,
     complete: function(results) {
       const endTime = Date.now();
-      if (endTime - startTime < 1000) { // Hide popup if loading too fast
+/*       if (endTime - startTime < 1000) { // Hide popup if loading too fast
         loadingPopup.style.display = 'none';
       } else {
         loadingPopup.classList.remove('active');
-      }
+      } */
 
       // "results.data" is your CSV as an array of objects
       movies = results.data;
