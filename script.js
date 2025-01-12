@@ -56,8 +56,9 @@ function loadCSVFromGoogle() {
     }
   });
 }
-
-document.addEventListener('DOMContentLoaded', loadCSVFromGoogle);
+document.addEventListener('DOMContentLoaded', function() {
+  loadCSVFromGoogle();
+});
 
 /* --------------------------------------------------
    WRITING RESULTS TO GOOGLE SHEETS
