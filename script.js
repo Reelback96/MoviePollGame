@@ -202,8 +202,6 @@ function movieCardHTML(movie) {
   if (!movie) return "";
   const trailerLink = movie.Trailer || "#";
   const rtLink = movie["Rotten Tomatoes"] || "#";
-
-  // Suppose your local "posters" folder is served somehow, or you have a direct link approach
   const posterSrc = posterPath(movie);
 
   return `
@@ -211,8 +209,8 @@ function movieCardHTML(movie) {
       <img class="poster" src="${posterSrc}" 
            onerror="this.onerror=null; this.src='posters/default.jpg';" />
       <div class="hover-buttons">
-        <a href="${trailerLink}" target="_blank" onclick="event.stopPropagation()">Watch Trailer</a>
-        <a href="${rtLink}" target="_blank" onclick="event.stopPropagation()">Rotten Tomatoes</a>
+        <a href="${trailerLink}" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open('${trailerLink}', '_blank');">Watch Trailer</a>
+        <a href="${rtLink}" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open('${rtLink}', '_blank');">Rotten Tomatoes</a>
       </div>
     </div>
     <div class="details">
