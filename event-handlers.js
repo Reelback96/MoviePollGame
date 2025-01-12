@@ -1,14 +1,14 @@
 document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("startButton").addEventListener("click", function() {
     // Show loading indicator
-    document.getElementById("loadingIndicator").style.display = "block";
+    // document.getElementById("loadingIndicator").style.display = "block";
     
     // Simulate fetching CSV and starting game
     fetchCSV().then(() => {
-      document.getElementById("loadingIndicator").style.display = "none";
+    //  document.getElementById("loadingIndicator").style.display = "none";
       startGame();
     }).catch(() => {
-      document.getElementById("loadingIndicator").style.display = "none";
+    //  document.getElementById("loadingIndicator").style.display = "none";
       alert("Failed to load CSV. Please try again.");
     });
   });
