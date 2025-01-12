@@ -45,7 +45,11 @@
   </div>
 
   <!-- Loading Indicator -->
-  <div id="loadingIndicator" style="display: none;">Loading...</div>
+  <div class="overlay" id="loadingPopupOverlay">
+  <div class="popup">
+    <p>Loading...</p>
+  </div>
+</div>
 
   <script src="https://apis.google.com/js/api.js" onload="if(window.handleClientLoad) handleClientLoad()"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
