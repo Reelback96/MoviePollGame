@@ -14,8 +14,7 @@
        but watch out for blocked requests if 'unsafe-inline' isn't allowed. -->
   <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';"> -->
   <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';">-->
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com; style-src 'self' 'unsafe-inline'; script-src-attr 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com">
-  <script src="event-handlers.js"></script>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com; style-src 'self' 'unsafe-inline'; script-src-attr 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com">  <script src="event-handlers.js"></script>
 </head>
 <body>
   <!-- HEADER / LOGO -->
@@ -74,7 +73,7 @@
   <script src="https://apis.google.com/js/api.js" onload="if(window.handleClientLoad) handleClientLoad()"></script>
 
   <!-- Papa Parse (CSV parsing) and your main script -->
-  <script src="https://github.com/Reelback96/MoviePollGame/blob/355ee2b2c5b60a5ce67c37bf264da6e9c052790f/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
