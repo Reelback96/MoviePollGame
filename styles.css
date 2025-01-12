@@ -267,25 +267,30 @@
     }
     
     /* Add responsive styles for mobile devices */
-    @media (max-width: 600px) {
-      .movie-container {
-        flex-direction: column;
-        align-items: center;
-      }
-    
-      .movie {
-        width: 90%; /* Adjust width for mobile */
-        margin: 10px 0;
-      }
-    
-      .hover-buttons {
-        flex-direction: column;
-        gap: 5px;
-      }
-    
-      .hover-buttons a {
-        padding: 10px 15px;
-        font-size: 1.2rem; /* Larger buttons for easier tap */
-      }
+    /* Align text and header image to the right on mobile */
+  @media (max-width: 600px) {
+    .header {
+      text-align: right;
     }
+    .header img {
+      margin: 0 0 0 auto;
+    }
+    #matchCounter {
+      font-size: 2rem; /* Increase counter numbers */
+    }
+    .header h2 {
+      text-align: right;
+    }
+    .movie {
+      width: 220px; /* Restore poster sizes */
+    }
+    .start-aligned {
+      transform: translateX(200px); /* Adjust the value as needed to avoid overlap */
+    }
+  }
+  
+  /* Remove "Matches Left" note */
+  #matchCounter::before {
+    content: "";
+  }
     </style>
