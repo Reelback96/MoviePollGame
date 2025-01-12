@@ -4,76 +4,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Library Films – First Movie Night Poll</title>
-
-  <!-- If you don't have Proxima Nova licensed, fallback to Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600&display=swap" />
   <link rel="stylesheet" href="styles.css">
-
-  <!-- Note: The CSP meta below might conflict if you do inline scripts
-       or need additional sources. For a typical script usage, this is okay,
-       but watch out for blocked requests if 'unsafe-inline' isn't allowed. -->
-  <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';"> -->
-  <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';">-->
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com; style-src 'self' 'unsafe-inline'; script-src-attr 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com">  <script src="event-handlers.js"></script>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com; style-src 'self' 'unsafe-inline'; script-src-attr 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com">
 </head>
 <body>
-  <!-- HEADER / LOGO -->
   <div class="header">
-    <!-- If this is your real image link from Drive, ensure it's a direct link. 
-         Right now, it's a local reference "LIBRARY FILMS 1 LINE v01_BLACK.png"? 
-         That might not load from a web context unless you have it served. 
-         Consider a direct link from Drive or hosting it somewhere. -->
     <img src="LIBRARY FILMS 1 LINE v01_BLACK.png" alt="Library Films" />
     <h2>First Movie Night Poll</h2>
   </div>
 
-  <!-- START PAGE -->
   <div id="startPage">
     <h2>Welcome to the King of the Hill Movie Poll!</h2>
-    <img id="instructionImage" src="https://via.placeholder.com/520x320?text=Placeholder+Instructions" 
-         alt="Instruction Placeholder" />
+    <img id="instructionImage" src="https://via.placeholder.com/520x320?text=Placeholder+Instructions" alt="Instruction Placeholder" />
     <p>
       In this poll, you’ll see two movies face off. Click the one you prefer.<br/>
       The winner remains champion, and a new challenger will appear next.<br/>
       Continue until all challengers have faced the champion.
     </p>
-    <!-- We'll call startGame() in script.js -->
-    <!-- <button onclick="startGame()">Start</button> -->
     <button id="startButton">Start</button>
   </div>
 
-  <!-- MATCH COUNTER -->
   <div id="matchCounter"></div>
 
-  <!-- MOVIE CONTAINER (KOTH) -->
   <div class="movie-container">
-    <div class="movie" id="champion" onclick="voteChampion()"></div>
-    <div class="movie" id="challenger" onclick="voteChallenger()"></div>
+    <div class="movie" id="champion"></div>
+    <div class="movie" id="challenger"></div>
   </div>
 
-  <!-- Show/Hide Sidebar -->
-  <button id="toggleSidebarBtn" onclick="toggleSidebar()">Show Current Rankings</button>
-  
-  <!-- SIDEBAR FOR LIVE RANKINGS -->
+  <button id="toggleSidebarBtn">Show Current Rankings</button>
+
   <div id="sidebar">
-    <button id="hideSidebarBtn" onclick="toggleSidebar()">Hide</button>
+    <button id="hideSidebarBtn">Hide</button>
     <h3>Current Rankings</h3>
     <ul id="rankingList"></ul>
   </div>
 
-  <!-- The overlay + popup for face-off & final DnD -->
   <div class="overlay" id="popupOverlay">
-    <div class="popup" id="popupContent">
-      <!-- We'll dynamically fill this with face-off or top5 DnD content -->
-    </div>
+    <div class="popup" id="popupContent"></div>
   </div>
-  
-  <!-- Google API (if you use gapi for writing to sheets 
-       or you do google.script.run in an Apps Script environment) -->
-  <script src="https://apis.google.com/js/api.js" onload="if(window.handleClientLoad) handleClientLoad()"></script>
 
-  <!-- Papa Parse (CSV parsing) and your main script -->
+  <script src="https://apis.google.com/js/api.js" onload="if(window.handleClientLoad) handleClientLoad()"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
   <script src="script.js"></script>
+  <script src="event-handlers.js"></script>
 </body>
 </html>
