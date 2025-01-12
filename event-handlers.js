@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("hideSidebarBtn").addEventListener("click", toggleSidebar);
 });
 
-function fetchCSV() {
+/* function fetchCSV() {
   return new Promise((resolve, reject) => {
     // Simulate CSV loading delay
     setTimeout(() => {
@@ -32,3 +32,4 @@ function fetchCSV() {
     }, 2000); // Simulate 2 seconds delay
   });
 }
+ */
