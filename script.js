@@ -21,7 +21,11 @@ let dragStartIndex = null;
 let sidebarOpen = false;
 
 /**
- * Load CSV (from GitHub).
+ * Load CSV (from a published Google Sheet).
+ * 
+ * NOTE: The URL is a "published" link for a Google Sheet as CSV output.
+ * Ensure the sheet is actually published with "Anyone with the link" 
+ * so that Papa Parse can fetch it without requiring sign-in.
  */
 
 function loadCSVFromGoogle() {
@@ -32,19 +36,23 @@ function loadCSVFromGoogle() {
     header: true,
     skipEmptyLines: true,
     complete: function(results) {
+      // "results.data" is your CSV as an array of objects
       movies = results.data;
+
+      // Assign IDs if missing, init votes to 0
       movies.forEach((movie, idx) => {
         if (!movie.ID) movie.ID = String(idx);
         votes[movie.ID] = 0;
       });
 
-      // Shuffle
+      // Shuffle the array into "shuffledMovies"
       shuffledMovies = [...movies];
       for (let i = shuffledMovies.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffledMovies[i], shuffledMovies[j]] = [shuffledMovies[j], shuffledMovies[i]];
       }
 
+      // champion is the first
       champion = shuffledMovies[0] || null;
       challengerIndex = 1;
 
@@ -56,34 +64,53 @@ function loadCSVFromGoogle() {
     }
   });
 }
+
+// When DOM is ready, automatically load the CSV
 document.addEventListener('DOMContentLoaded', function() {
   loadCSVFromGoogle();
 });
 
 /* --------------------------------------------------
    WRITING RESULTS TO GOOGLE SHEETS
+   (Using Google API client, not Apps Script .gs)
 -------------------------------------------------- */
+
+// If you want to use the Google Sheets API via gapi client, 
+// you must do handleClientLoad -> initClient -> sign in -> then write.
+
 /*
 function handleClientLoad() {
+  // This is called once <script src="https://apis.google.com/js/api.js" onload="handleClientLoad()"> loads
   gapi.load('client:auth2', initClient);
 }
 */
+
 function initClient() {
+  // Initialize the Sheets API
+  // Make sure you have your correct API key, client ID, and the right scopes
   gapi.client.init({
     apiKey: 'AIzaSyDQAfQqd0amONt3fEXg7stS1lvbQhD7OWA',
     clientId: '866522257651-645mjjbmugbiqoerc8m7ve4ear4fuec8.apps.googleusercontent.com',
     discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
     scope: "https://www.googleapis.com/auth/spreadsheets"
   }).then(function () {
+    // Prompt user to sign in
     gapi.auth2.getAuthInstance().signIn();
   });
 }
 
+/**
+ * Example function to write poll results to a Google Sheet
+ * with ID '1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww'.
+ * 
+ * The user must be signed in with enough permissions (the scope).
+ */
 function writePollResultsToSheet() {
   const results = [["Movie ID", "Votes"]];
   for (const [movieID, voteCount] of Object.entries(votes)) {
     results.push([movieID, voteCount]);
   }
+
   const params = {
     spreadsheetId: '1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww',
     range: 'Sheet1!A1',
@@ -91,62 +118,29 @@ function writePollResultsToSheet() {
   };
 
   const valueRangeBody = {
-    "majorDimension": "ROWS",
-    "values": results
+    majorDimension: "ROWS",
+    values: results
   };
 
-  gapi.client.sheets.spreadsheets.values.update(params, valueRangeBody).then((response) => {
-    console.log(response.result);
-  }).catch((error) => {
-    console.error("Error writing to the sheet:", error);
-  });
+  // This call requires your user to be authorized
+  gapi.client.sheets.spreadsheets.values.update(params, valueRangeBody)
+    .then((response) => {
+      console.log("Sheet update result:", response.result);
+      alert("Poll results successfully written!");
+    })
+    .catch((error) => {
+      console.error("Error writing to the sheet:", error);
+      alert("Failed to write poll results. Check console.");
+    });
 }
-
-/**
- * Load CSV (via file input).
- */
-/* function loadCSV(event) {
-   const file = event.target.files[0];
-   if (!file) {
-     alert("No file selected!");
-     return;
-   }
-
-   Papa.parse(file, {
-     header: true,
-     skipEmptyLines: true,
-     complete: function(results) {
-       movies = results.data;
-       movies.forEach((movie, idx) => {
-         if (!movie.ID) movie.ID = String(idx);
-         votes[movie.ID] = 0;
-       });
-
-      // Shuffle
-       shuffledMovies = [...movies];
-       for (let i = shuffledMovies.length - 1; i > 0; i--) {
-         const j = Math.floor(Math.random() * (i + 1));
-         [shuffledMovies[i], shuffledMovies[j]] = [shuffledMovies[j], shuffledMovies[i]];
-       }
-
-       champion = shuffledMovies[0] || null;
-       challengerIndex = 1;
-
-       console.log("CSV loaded, ready to start!");
-     },
-     error: function(err) {
-       console.error("Papa Parse error:", err);
-       alert("Failed to read the CSV. Check console for details.");
-     }
-   });
- }*/
 
 /* --------------------------------------------------
    STARTING THE GAME
 -------------------------------------------------- */
 function startGame() {
+  // Ensure we actually have champion loaded from CSV
   if (!champion || movies.length < 2) {
-    alert("Please upload a CSV with at least 2 movies before starting!");
+    alert("Please load a CSV with at least 2 movies before starting!");
     return;
   }
   // Hide start page
@@ -201,13 +195,15 @@ function renderPair() {
 /**
  * Returns HTML for a single movie card, including hover buttons.
  * 
- * CRITICAL FIX: We add onclick="event.stopPropagation()" to the links,
- * so that clicking those links won't trigger the parent's vote click.
+ * We add onclick="event.stopPropagation()" to links 
+ * so that clicking them won't trigger the parent's vote click.
  */
 function movieCardHTML(movie) {
   if (!movie) return "";
   const trailerLink = movie.Trailer || "#";
   const rtLink = movie["Rotten Tomatoes"] || "#";
+
+  // Suppose your local "posters" folder is served somehow, or you have a direct link approach
   const posterSrc = posterPath(movie);
 
   return `
@@ -243,6 +239,10 @@ function voteChallenger() {
   renderPair();
 }
 
+/**
+ * Simple poster path logic
+ * If you have e.g. "The Town" => "the_town.jpg" in your local "posters" folder
+ */
 function posterPath(movie) {
   const safeTitle = (movie.Title || "unknown")
     .replace(/^The\s+/i, "")
@@ -265,6 +265,7 @@ function updateSidebarRankings() {
   const rankingList = document.getElementById("rankingList");
   rankingList.innerHTML = "";
 
+  // Sort by vote count descending
   const sortedArr = [...movies].sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
   sortedArr.forEach((m) => {
     const li = document.createElement("li");
@@ -292,6 +293,7 @@ function finalizeTop5() {
   const fifthVotes = votes[fifth.ID] || 0;
 
   if (championVotes > fifthVotes) {
+    // champion auto-enters top5
     provisionalTop5.pop();
     provisionalTop5.push(champion);
     provisionalTop5.sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
@@ -457,10 +459,16 @@ function handleDrop(e) {
 function saveFinalTop5Order() {
   console.log("Final Top 5 Order:", top5Movies);
   alert("Your final Top 5 order is saved!");
+  // Optionally write poll results here:
   writePollResultsToSheet();
   closePopup();
 }
 
+/**
+ * If you want to handle loading the Google API after DOM load:
+ */
 document.addEventListener('DOMContentLoaded', function() {
-  handleClientLoad();
+  // If you want auto-auth, you can do:
+  // handleClientLoad(); // if your handleClientLoad() is uncommented
+  // Or do nothing if you only call it manually
 });
