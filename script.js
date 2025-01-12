@@ -138,11 +138,11 @@ function writePollResultsToSheet() {
    STARTING THE GAME
 -------------------------------------------------- */
 function startGame() {
-  // Ensure we actually have champion loaded from CSV
   if (!champion || movies.length < 2) {
     alert("Please load a CSV with at least 2 movies before starting!");
     return;
   }
+
   // Hide start page
   document.getElementById("startPage").style.display = "none";
   // Show movie container
@@ -150,6 +150,12 @@ function startGame() {
   // Show match counter & toggle sidebar button
   document.getElementById("matchCounter").style.display = "block";
   document.getElementById("toggleSidebarBtn").style.display = "block";
+
+  // Apply alignment class only on mobile
+  if (window.innerWidth <= 600) {
+    document.querySelector(".header").classList.add("start-aligned");
+    document.getElementById("matchCounter").classList.add("start-aligned");
+  }
 
   updateMatchCounter();
   renderPair();
