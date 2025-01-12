@@ -219,23 +219,42 @@ function renderPair() {
 
 /**
  * Returns HTML for a single movie card, including hover buttons.
+ *
+ * Instead of inline onclick="...", we give each <a> a unique class
+ * to which we'll attach event listeners externally (e.g., in event-handlers.js).
  * 
- * We add onclick="event.stopPropagation()" to links 
- * so that clicking them won't trigger the parent's vote click.
+ * That way, no inline attributes are present, satisfying strict CSP.
  */
 function movieCardHTML(movie) {
   if (!movie) return "";
+
   const trailerLink = movie.Trailer || "#";
   const rtLink = movie["Rotten Tomatoes"] || "#";
   const posterSrc = posterPath(movie);
 
+  // Build the HTML with classes for each link
   return `
     <div class="poster-container">
-      <img class="poster" src="${posterSrc}" 
-           onerror="this.onerror=null; this.src='posters/default.jpg';" />
+      <img 
+        class="poster" 
+        src="${posterSrc}" 
+        onerror="this.onerror=null; this.src='posters/default.jpg';" 
+      />
       <div class="hover-buttons">
-        <a href="${trailerLink}" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open('${trailerLink}', '_blank');">Watch Trailer</a>
-        <a href="${rtLink}" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open('${rtLink}', '_blank');">Rotten Tomatoes</a>
+        <a 
+          href="${trailerLink}" 
+          class="trailer-link" 
+          target="_blank"
+        >
+          Watch Trailer
+        </a>
+        <a 
+          href="${rtLink}" 
+          class="rt-link" 
+          target="_blank"
+        >
+          Rotten Tomatoes
+        </a>
       </div>
     </div>
     <div class="details">
@@ -357,10 +376,10 @@ function faceOffHTML() {
     <h3>Final Face-off: Champion vs. #5</h3>
     <p>Select which one should enter the Top 5!</p>
     <div class="movie-container" style="display:flex; gap:20px;">
-      <div class="movie" onclick="faceOffChampionWins()" style="cursor:pointer;">
+      <div class="movie face-off-champion" style="cursor:pointer;">
         ${movieCardHTML(finalChamp)}
       </div>
-      <div class="movie" onclick="faceOffChallengerWins()" style="cursor:pointer;">
+      <div class="movie face-off-challenger" style="cursor:pointer;">
         ${movieCardHTML(finalFifth)}
       </div>
     </div>
@@ -392,7 +411,7 @@ function top5DndHTML() {
   return `
     <h3>Your Top 5 (Drag & Drop to Reorder)</h3>
     <ul id="top5List"></ul>
-    <button onclick="saveFinalTop5Order()">Submit my Top 5</button>
+    <button class="submit-top5-btn">Submit my Top 5</button>
   `;
 }
 
