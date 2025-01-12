@@ -152,10 +152,10 @@ function startGame() {
   document.getElementById("toggleSidebarBtn").style.display = "block";
 
   // Apply alignment class only on mobile
-  if (window.innerWidth <= 600) {
+  /* if (window.innerWidth <= 600) {
     document.querySelector(".header").classList.add("start-aligned");
     document.getElementById("matchCounter").classList.add("start-aligned");
-  }
+  }*/
 
   updateMatchCounter();
   renderPair();
