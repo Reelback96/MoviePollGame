@@ -4,11 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Library Films – First Movie Night Poll</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600&display=swap" />
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com;">
 
-  <!-- Example fallback for demonstration if you don't have Proxima Nova licensed -->
+  <!-- If you don't have Proxima Nova licensed, fallback to Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600&display=swap" />
+
+  <!-- Note: The CSP meta below might conflict if you do inline scripts
+       or need additional sources. For a typical script usage, this is okay,
+       but watch out for blocked requests if 'unsafe-inline' isn't allowed. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com;">
 
   <style>
     /* ----------------------------------------------------------
@@ -22,7 +26,7 @@
       padding: 0;
       background: #f4f4f4;
       color: #333;
-      font-family: 'Proxima Nova', 'Source Sans Pro', sans-serif;
+      font-family: 'Proxima Nova','Source Sans Pro',sans-serif;
     }
     h1, h2, h3, h4, h5 {
       margin: 0;
@@ -61,11 +65,14 @@
     .header img {
       max-width: 390px; /* scaled up ~30% from 300px */
       height: auto;
+      display: block;
+      margin: 0 auto; /* Center the image if needed */
     }
     .header h2 {
       margin-top: 10px;
       font-size: 1.4rem; /* bigger than 1.2rem */
       color: #555;
+      text-align: center;
     }
     
     /* ----------------------------------------------------------
@@ -92,6 +99,7 @@
       max-width: 900px; /* wider to accommodate bigger text */
       margin: 20px auto;
       color: #444;
+      text-align: center;
     }
 
     /* ----------------------------------------------------------
@@ -264,10 +272,13 @@
 <body>
   <!-- HEADER / LOGO -->
   <div class="header">
+    <!-- If this is your real image link from Drive, ensure it's a direct link. 
+         Right now, it's a local reference "LIBRARY FILMS 1 LINE v01_BLACK.png"? 
+         That might not load from a web context unless you have it served. 
+         Consider a direct link from Drive or hosting it somewhere. -->
     <img src="LIBRARY FILMS 1 LINE v01_BLACK.png" alt="Library Films" />
     <h2>First Movie Night Poll</h2>
   </div>
-
 
   <!-- START PAGE -->
   <div id="startPage">
@@ -279,6 +290,7 @@
       The winner remains champion, and a new challenger will appear next.<br/>
       Continue until all challengers have faced the champion.
     </p>
+    <!-- We'll call startGame() in script.js -->
     <button onclick="startGame()">Start</button>
   </div>
 
@@ -291,7 +303,7 @@
     <div class="movie" id="challenger" onclick="voteChallenger()"></div>
   </div>
 
-  <!-- BUTTON TO TOGGLE SIDEBAR (ON THE LEFT) -->
+  <!-- Show/Hide Sidebar -->
   <button id="toggleSidebarBtn" onclick="toggleSidebar()">Show Current Rankings</button>
   
   <!-- SIDEBAR FOR LIVE RANKINGS -->
@@ -304,16 +316,16 @@
   <!-- The overlay + popup for face-off & final DnD -->
   <div class="overlay" id="popupOverlay">
     <div class="popup" id="popupContent">
-      <!-- We'll dynamically fill this with face-off or top5 DnD -->
+      <!-- We'll dynamically fill this with face-off or top5 DnD content -->
     </div>
   </div>
   
-<!-- Google Service -->
-<script src="https://apis.google.com/js/api.js" onload="handleClientLoad()"></script>
+  <!-- Google API (if you use gapi for writing to sheets 
+       or you do google.script.run in an Apps Script environment) -->
+  <script src="https://apis.google.com/js/api.js" onload="if(window.handleClientLoad) handleClientLoad()"></script>
 
-<!-- Papa Parse (CSV parsing) + main script -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-<script src="script.js"></script>
-  
+  <!-- Papa Parse (CSV parsing) and your main script -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
