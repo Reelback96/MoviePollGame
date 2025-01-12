@@ -31,8 +31,8 @@ let sidebarOpen = false;
 function loadCSVFromGoogle() {
   const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv';
 
-  const loadingPopup = document.getElementById('loadingPopupOverlay');
-  loadingPopup.classList.add('active');
+/*   const loadingPopup = document.getElementById('loadingPopupOverlay');
+  loadingPopup.classList.add('active'); */
 
   const startTime = Date.now();
 
