@@ -41,10 +41,11 @@ function loadCSVFromGoogle() {
     header: true,
     skipEmptyLines: true,
     complete: function(results) {
-      loadingPopup.classList.remove('active');
       const endTime = Date.now();
       if (endTime - startTime < 1000) { // Hide popup if loading too fast
         loadingPopup.style.display = 'none';
+      } else {
+        loadingPopup.classList.remove('active');
       }
 
       // "results.data" is your CSV as an array of objects
