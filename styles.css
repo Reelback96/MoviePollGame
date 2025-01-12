@@ -274,4 +274,41 @@
       font-size: 1.2rem; /* Larger buttons for easier tap */
     }
 }
+
+/* Prevent button clicks from triggering poster clicks */
+.hover-buttons a {
+  pointer-events: auto;
+}
+
+/* Adjust alignment of elements after hitting start */
+.header, #startPage, #matchCounter {
+  transition: transform 0.3s;
+}
+
+.start-aligned {
+  transform: translateX(200px); /* Adjust the value as needed to avoid overlap */
+}
+
+/* Add responsive styles for mobile devices */
+@media (max-width: 600px) {
+  .movie-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .movie {
+    width: 90%; /* Adjust width for mobile */
+    margin: 10px 0;
+  }
+
+  .hover-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .hover-buttons a {
+    padding: 10px 15px;
+    font-size: 1.2rem; /* Larger buttons for easier tap */
+  }
+}
   </style>
