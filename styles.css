@@ -251,4 +251,27 @@
     #top5List li.dragging {
       opacity: 0.2;
     }
+
+  /* Add responsive styles for mobile devices */
+  @media (max-width: 600px) {
+    .movie-container {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .movie {
+      width: 90%; /* Adjust width for mobile */
+      margin: 10px 0;
+    }
+  
+    .hover-buttons {
+      flex-direction: column;
+      gap: 5px;
+    }
+  
+    .hover-buttons a {
+      padding: 10px 15px;
+      font-size: 1.2rem; /* Larger buttons for easier tap */
+    }
+}
   </style>
