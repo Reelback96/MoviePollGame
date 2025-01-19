@@ -4,29 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Library Films – First Movie Night Poll</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600&display=swap" />
-  <link rel="stylesheet" href="styles.css">
-  <meta http-equiv="Content-Security-Policy" 
-  content="
-    script-src 
-      'self' 
-      https://cdn.jsdelivr.net
-      https://apis.google.com
-      https://github.com
-      https://accounts.google.com;
-    object-src 'none';
-  ">
 
+  <!-- Optional: Fallback font from Google -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600&display=swap" />
+
+  <!-- Your main styles -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- CSP: Adjust script-src sources as needed. -->
+  <meta 
+    http-equiv="Content-Security-Policy"
+    content="
+      script-src 
+        'self' 
+        https://cdn.jsdelivr.net
+        https://apis.google.com
+        https://github.com
+        https://accounts.google.com;
+      object-src 'none';
+    "
+  >
 </head>
 <body>
+  <!-- HEADER -->
   <div class="header">
-    <img src="https://raw.githubusercontent.com/Reelback96/MoviePollGame/gh-pages/LIBRARY%20FILMS%201%20LINE%20v01_BLACK.png" alt="Library Films" />
+    <img 
+      src="https://raw.githubusercontent.com/Reelback96/MoviePollGame/gh-pages/LIBRARY%20FILMS%201%20LINE%20v01_BLACK.png" 
+      alt="Library Films" 
+    />
     <h2>First Movie Night Poll</h2>
   </div>
 
+  <!-- START PAGE CONTENT -->
   <div id="startPage">
     <h2>Welcome to the King of the Hill Movie Poll!</h2>
-    <img id="instructionImage" src="https://via.placeholder.com/520x320?text=Placeholder+Instructions" alt="Instruction Placeholder" />
+    <img 
+      id="instructionImage" 
+      src="https://via.placeholder.com/520x320?text=Placeholder+Instructions" 
+      alt="Instruction Placeholder" 
+    />
     <p>
       In this poll, you’ll see two movies face off. Click the one you prefer.<br/>
       The winner remains champion, and a new challenger will appear next.<br/>
@@ -35,36 +51,57 @@
     <button id="startButton">Start</button>
   </div>
 
+  <!-- MATCH COUNTER -->
   <div id="matchCounter"></div>
 
+  <!-- MOVIE CONTAINER FOR KOTH -->
   <div class="movie-container">
     <div class="movie" id="champion"></div>
     <div class="movie" id="challenger"></div>
   </div>
 
+  <!-- BUTTON TO SHOW SIDEBAR / RANKINGS -->
   <button id="toggleSidebarBtn">Show Current Rankings</button>
 
+  <!-- SIDEBAR with current rankings -->
   <div id="sidebar">
     <button id="hideSidebarBtn">Hide</button>
     <h3>Current Rankings</h3>
     <ul id="rankingList"></ul>
   </div>
 
+  <!-- OVERLAY for face-off / final top5 DnD popups -->
   <div class="overlay" id="popupOverlay">
     <div class="popup" id="popupContent"></div>
   </div>
 
-  <!-- Loading Indicator -->
+  <!-- LOADING OVERLAY for CSV parsing, etc. -->
   <div class="overlay" id="loadingPopupOverlay">
-  <div class="popup">
-    <p>Loading...</p>
+    <div class="popup">
+      <p>Loading...</p>
+    </div>
   </div>
-</div>
-  
-  <script src="https://accounts.google.com/gsi/client"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
-  <script src="script.js"></script>
-  <script src="event-handlers.js"></script>
 
+  <div id="userTopPick"></div>
+
+  <!-- OVERLAY for face-off / final top5 DnD popups -->
+  <div class="overlay" id="popupOverlay">
+    <div class="popup" id="popupContent">
+      <!-- Post-submission content will be injected here via JavaScript -->
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <!-- 1) Google Identity Services (GIS) client -->
+  <script src="https://accounts.google.com/gsi/client"></script>
+  
+  <!-- 2) Papa Parse for CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+  
+  <!-- 3) Your main game logic -->
+  <script src="script.js"></script>
+  
+  <!-- 4) Event handlers + Google Sheets logic -->
+  <script src="event-handlers.js"></script>
 </body>
 </html>

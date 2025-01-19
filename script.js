@@ -135,16 +135,20 @@ function startGame() {
 -------------------------------------------------- */
 function updateMatchCounter() {
   const totalMatches = shuffledMovies.length - 1;
-  const matchesLeft = shuffledMovies.length - challengerIndex;
+  const matchesLeft = (shuffledMovies.length - challengerIndex);
+
   const counterEl = document.getElementById("matchCounter");
 
-  counterEl.textContent = `Matches left: ${matchesLeft} of ${totalMatches}`;
-
-  // Example: simpler text on mobile
+  // If on mobile
   if (window.innerWidth <= 600) {
-    counterEl.textContent = `${matchesLeft}`;
+    // "74/74" style
+    counterEl.textContent = `${matchesLeft}/${totalMatches}`;
+  } else {
+    // Desktop: "Matches left: 74 of 74"
+    counterEl.textContent = `Matches left: ${matchesLeft} of ${totalMatches}`;
   }
 }
+
 
 /* --------------------------------------------------
    KOTH RENDER & VOTING
@@ -172,6 +176,10 @@ function renderPair() {
   championElem.setAttribute("data-id", champion.ID);
   challengerElem.setAttribute("data-id", challenger.ID);
 
+  // NEW: highlight champion side
+  championElem.classList.add("movie", "current-champion");
+  challengerElem.classList.remove("current-champion"); // ensure only champion side has highlight
+
   updateMatchCounter();
   updateSidebarRankings();
 }
@@ -183,22 +191,27 @@ function renderPair() {
 function movieCardHTML(movie) {
   if (!movie) return "";
 
+  const posterSrc = posterPath(movie);
   const trailerLink = movie.Trailer || "#";
   const rtLink = movie["Rotten Tomatoes"] || "#";
-  const posterSrc = posterPath(movie);
 
   return `
     <div class="poster-container">
       <img class="poster" src="${posterSrc}" data-fallback="posters/default.jpg" />
+
+      <!-- Desktop hover buttons (hidden on mobile) -->
       <div class="hover-buttons">
-        <a href="${trailerLink}" class="trailer-link" target="_blank">
-          Watch Trailer
-        </a>
-        <a href="${rtLink}" class="rt-link" target="_blank">
-          Rotten Tomatoes
-        </a>
+        <a href="${trailerLink}" class="trailer-link" target="_blank">Trailer</a>
+        <a href="${rtLink}" class="rt-link" target="_blank">Rotten Tomatoes</a>
       </div>
     </div>
+
+    <!-- Mobile-only separate links -->
+    <div class="mobile-links">
+      <a href="${trailerLink}" class="trailer-link mobile-button" target="_blank">Trailer</a>
+      <a href="${rtLink}" class="rt-link mobile-button" target="_blank">Rotten Tomatoes</a>
+    </div>
+
     <div class="details">
       <h3>${movie.Title} (${movie.Year})</h3>
       <p><strong>Director:</strong> ${movie.Director}</p>
@@ -284,6 +297,7 @@ function updateSidebarRankings() {
  * Then show face-off or the final DnD popup.
  */
 function finalizeTop5() {
+  console.log("=== finalizeTop5 CALLED, champion is:", champion);
   const sorted = [...movies].sort(
     (a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0)
   );
@@ -292,6 +306,7 @@ function finalizeTop5() {
   // If champion is already in top5
   const champIndex = provisionalTop5.findIndex((m) => m.ID === champion.ID);
   if (champIndex >= 0) {
+    console.log("Champion is already in the top 5: ", champion);
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(false);
     return;
@@ -304,17 +319,20 @@ function finalizeTop5() {
 
   if (championVotes > fifthVotes) {
     // champion auto-enters top5
+    console.log("Champion displaces #5 (more votes) => no face-off:", championVotes, fifthVotes);
     provisionalTop5.pop();
     provisionalTop5.push(champion);
     provisionalTop5.sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(false);
   } else if (championVotes < fifthVotes) {
+    console.log("Champion has FEWER votes => final face-off triggered:", championVotes, fifthVotes);
     finalChamp = champion;
     finalFifth = fifth;
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(true);
   } else {
+    console.log("Tie => final face-off triggered:", championVotes, fifthVotes);
     finalChamp = champion;
     finalFifth = fifth;
     top5Movies = provisionalTop5;
@@ -331,6 +349,7 @@ let popupStep = 1;
 function openPopup_faceOffOrDnd(faceOffNeeded) {
   popupStep = faceOffNeeded ? 1 : 2;
   const overlay = document.getElementById("popupOverlay");
+  
   const popup = document.getElementById("popupContent");
 
   overlay.classList.add("active");
@@ -344,11 +363,14 @@ function openPopup_faceOffOrDnd(faceOffNeeded) {
 }
 
 function faceOffHTML() {
+  console.log("faceOffHTML finalChamp:", finalChamp);
+  console.log("Champion poster path:", posterPath(finalChamp));
+  console.log("faceOffHTML finalFifth:", finalFifth);
   return `
     <h3>Final Face-off: Champion vs. #5</h3>
     <p>Select which one should enter the Top 5!</p>
-    <div class="movie-container faceoff-container">
-      <div class="movie face-off-champion">
+    <div class="faceoff-container">
+      <div class="movie face-off-champion current-champion">
         ${movieCardHTML(finalChamp)}
       </div>
       <div class="movie face-off-challenger">
@@ -487,8 +509,9 @@ function handleDrop(e) {
  */
 function saveFinalTop5Order() {
   console.log("Final Top 5 Order:", top5Movies);
-
-  // This triggers the final data push in event-handlers.js
-  // e.g. requestSheetsTokenAndWrite();
-  requestSheetsTokenAndWrite();
+  if (typeof window.requestSheetsTokenAndWrite === 'function') {
+    window.requestSheetsTokenAndWrite();
+  } else {
+    console.error("requestSheetsTokenAndWrite is not defined globally.");
+  }
 }
