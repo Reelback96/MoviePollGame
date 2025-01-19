@@ -1,26 +1,24 @@
 /********************************************
- * event-handlers.js
+ * event-handlers.js — Google Sheets logic
  ********************************************/
-document.addEventListener("DOMContentLoaded", function() {
-  // 1) Start button => fetch CSV, then startGame
-  document.getElementById("startButton").addEventListener("click", function() {
-    const loadingPopup = document.getElementById("loadingPopupOverlay");
-    loadingPopup.classList.add("active");
 
-    // Actually load CSV from Google (the real Papa Parse function)
+document.addEventListener("DOMContentLoaded", function() {
+  const SPREADSHEET_ID = "1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww";
+  
+  // Step A) Attach your event listeners
+  // 1) Start button => load CSV => startGame
+  document.getElementById("startButton").addEventListener("click", function() {
+    console.log("Start button clicked!");
     loadCSVFromGoogle()
       .then(() => {
-        // done => hide popup
-        loadingPopup.classList.remove("active");
         startGame();
       })
       .catch(() => {
-        loadingPopup.classList.remove("active");
-        alert("Failed to load CSV. Please try again.");
+        alert("Failed to load CSV. Check console.");
       });
-  }); // <--- Only one closing brace for the startButton click
+  });
 
-  // 2) Champion & Challenger direct clicks
+  // 2) champion & challenger direct clicks
   document.getElementById("champion").addEventListener("click", voteChampion);
   document.getElementById("challenger").addEventListener("click", voteChallenger);
 
@@ -28,88 +26,74 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("toggleSidebarBtn").addEventListener("click", toggleSidebar);
   document.getElementById("hideSidebarBtn").addEventListener("click", toggleSidebar);
 
-  // 4) Delegated click on document.body for face-off & links
+  // 4) Delegated clicks on document.body for face-off & links
   document.body.addEventListener("click", function(e) {
-    // A) Face-off champion
+    // face-off champion
     if (e.target.closest(".face-off-champion")) {
       faceOffChampionWins();
       return;
     }
-
-    // B) Face-off challenger
+    // face-off challenger
     if (e.target.closest(".face-off-challenger")) {
       faceOffChallengerWins();
       return;
     }
-
-    // C) Trailer link
+    // trailer link
     if (e.target.classList.contains("trailer-link")) {
       e.stopPropagation();
       e.preventDefault();
       window.open(e.target.href, "_blank");
       return;
     }
-
-    // D) RT link
+    // RT link
     if (e.target.classList.contains("rt-link")) {
       e.stopPropagation();
       e.preventDefault();
       window.open(e.target.href, "_blank");
       return;
     }
-
-    // E) "Submit my Top 5" button from top5DndHTML
+    // "Submit my Top 5" button from top5DndHTML
     if (e.target.classList.contains("submit-top5-btn")) {
       e.stopPropagation();
-      e.preventDefault(); // not strictly necessary for a button, but harmless
+      e.preventDefault();
       saveFinalTop5Order(); 
       return;
     }
   });
 
-  // 5) Poster fallback logic for <img> with data-fallback
+  // 5) Poster fallback logic
   const allPosters = document.querySelectorAll("img.poster");
   allPosters.forEach((img) => {
     img.addEventListener("error", function handleError() {
-      // fallback to 'posters/default.jpg' or what's in data-fallback
       img.src = img.getAttribute("data-fallback") || "posters/default.jpg";
-      // Remove the listener to prevent infinite loops
       img.removeEventListener("error", handleError);
     });
   });
 
   console.log("All event listeners attached via one DOMContentLoaded.");
 
-  /***********************************************************
-   * 6) NEW GOOGLE IDENTITY SERVICES (GIS) TOKEN-BASED APPROACH
-   ***********************************************************/
-
-  // A variable to store the user's access token
+  // We assume you have the GIS flow set up:
   let accessToken = null;
-
-  // Step A: Initialize the token client. We'll do this once DOM is loaded.
-  // Use your actual client_id and scope:
   const tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: "866522257651-645mjjbmugbiqoerc8m7ve4ear4fuec8.apps.googleusercontent.com",
     scope: "https://www.googleapis.com/auth/spreadsheets",
     callback: (tokenResponse) => {
-      // This callback fires once we have the token
       if (tokenResponse && tokenResponse.access_token) {
         console.log("Got GIS access token:", tokenResponse.access_token);
         accessToken = tokenResponse.access_token;
-        // Now we can call the function that writes to Sheets, for example:
         actuallyWriteTop5AndTallies();
       } else {
-        console.error("Token response was missing access_token:", tokenResponse);
+        console.error("Token response missing access_token:", tokenResponse);
         alert("Could not get token for Sheets. Check console.");
       }
     },
   });
 
-  // Step B: We define a function that requests a token if we don’t have one, or it’s expired.
-  // We'll call this from "submit top 5" or "write top 5 & tallies" logic
+  /**
+   * If we already have a token, call the final write logic.
+   * Otherwise, request it.
+   */
   window.requestSheetsTokenAndWrite = function() {
-    // If we already have a token, we can call the logic directly:
     if (accessToken) {
       console.log("Already have an access token, calling actuallyWriteTop5AndTallies...");
       actuallyWriteTop5AndTallies();
@@ -119,20 +103,41 @@ document.addEventListener("DOMContentLoaded", function() {
     tokenClient.requestAccessToken({ prompt: "consent" });
   };
 
-  // Step C: A function that does the actual Sheets calls using fetch
+  /**
+   * The main flow once we have a token:
+   * 1) user ID => check if used
+   * 2) write top5 => Top5Sheet
+   * 3) build dictionary Title => count from ID-based dictionary
+   * 4) write that single row => FullTallySheet
+   * 5) log user ID => UserIDs
+   */
   function actuallyWriteTop5AndTallies() {
     console.log("actuallyWriteTop5AndTallies: we have a token, let's do the writes.");
 
-    // For example usage:
-    const userName = "Alice";
-    const userTop5 = ["MovieA", "MovieB", "MovieC", "MovieD", "MovieE"];
-    const fullTallyObj = { MovieA: 10, MovieB: 5 };
+    const userId = getOrCreateUserId();
+    console.log("User ID:", userId);
 
-    // We'll do 2 separate calls. 
-    // 1) writeTop5Sheet, 2) writeTotalTallySheet.
-
-    writeTop5Sheet(userName, userTop5)
-      .then(() => writeTotalTallySheet(fullTallyObj))
+    isUserIdAlreadySubmitted(userId)
+      .then(alreadySubmitted => {
+        if (alreadySubmitted) {
+          alert("You have already submitted. One submission per user!");
+          throw new Error("Duplicate submission from userId: " + userId);
+        }
+        // 1) write top5 => "Top5Sheet"
+        // top5Movies is from script.js
+        const top5Array = top5Movies.map(m => m.Title);
+        return writeTop5Sheet(userId, top5Array);
+      })
+      .then(() => {
+        // 2) Build Title => count dictionary from ID-based 'votes'
+        const titleDict = buildTitleDictionaryFromID();
+        // 3) write single row => FullTallySheet
+        return writeFullTallyRow(userId, titleDict);
+      })
+      .then(() => {
+        // 4) log user ID => "UserIDs"
+        return logUserId(userId);
+      })
       .then(() => {
         alert("All sheets written successfully!");
       })
@@ -142,22 +147,24 @@ document.addEventListener("DOMContentLoaded", function() {
       });
   }
 
-  // Step D: Actually define the helper functions that do fetch to Sheets 
-  function writeTop5Sheet(name, top5Array) {
-    // e.g. format the data as you want
+  /****************************************************
+   * Write top 5 => "Top5Sheet", single row:
+   * [ userID, top5_1, top5_2, top5_3, top5_4, top5_5, TIMESTAMP ]
+   ****************************************************/
+  function writeTop5Sheet(userId, top5Array) {
     const timestamp = new Date().toISOString();
-    const rowValues = [name, ...top5Array, timestamp];
+    const rowValues = [ userId, ...top5Array, timestamp ];
 
     const body = {
       majorDimension: "ROWS",
-      values: [rowValues],
+      values: [ rowValues ]
     };
-    // We'll do a fetch to the REST endpoint:
-    return fetch("https://sheets.googleapis.com/v4/spreadsheets/1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww/values/Top5Sheet!A2:append?valueInputOption=RAW", {
-      method: "POST",
+
+    return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Top5Sheet!A2:append?valueInputOption=RAW`, {
+      method: 'POST',
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
+        "Authorization": `Bearer ${accessToken}`
       },
       body: JSON.stringify(body),
     })
@@ -172,37 +179,138 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  function writeTotalTallySheet(movieTallyObj) {
-    const timestamp = new Date().toISOString();
-    const rowValues = [];
-    for (const [movieTitle, count] of Object.entries(movieTallyObj)) {
-      rowValues.push(movieTitle, count);
+  /****************************************************
+   * buildTitleDictionaryFromID:
+   * For each movie in "movies" (script.js), do:
+   *   dict[movie.Title] = votes[movie.ID] || 0
+   * Then we can sort ignoring "The" if we want.
+   ****************************************************/
+  function buildTitleDictionaryFromID() {
+    let dict = {};
+    for (const movieObj of movies) {
+      const id = movieObj.ID;
+      const title = movieObj.Title;
+      const count = votes[id] || 0;
+      dict[title] = count;
     }
-    rowValues.push(timestamp);
-
-    const body = {
-      majorDimension: "ROWS",
-      values: [rowValues],
-    };
-
-    // Here, I'm using append to add a new row. You can do an update if you prefer.
-    return fetch("https://sheets.googleapis.com/v4/spreadsheets/1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww/values/FullTallySheet!A2:append?valueInputOption=RAW", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(body),
-    })
-    .then(resp => {
-      if (!resp.ok) {
-        throw new Error(`writeTotalTallySheet failed: HTTP ${resp.status}`);
-      }
-      return resp.json();
-    })
-    .then(data => {
-      console.log("writeTotalTallySheet success:", data);
-    });
+    return dict;
   }
 
-}); // End of DOMContentLoaded
+  /****************************************************
+   * Write a single row to "FullTallySheet":
+   * [ userID, <count for each movie in alphabetical ignoring "The">, timestamp ]
+   ****************************************************/
+  async function writeFullTallyRow(userId, titleDict) {
+    // 1) get all Titles from titleDict
+    // or we could rely on "MOVIE_LIST"
+    let allTitles = Object.keys(titleDict);
+
+    // 2) sort ignoring "The"
+    allTitles.sort((a, b) => strippedTitle(a).localeCompare(strippedTitle(b)));
+
+    // 3) build the row: [ userId, ...counts..., timestamp ]
+    const row = [ userId ];
+    for (const title of allTitles) {
+      row.push(titleDict[title] || 0);
+    }
+    row.push(new Date().toISOString());
+
+    // POST that row
+    const body = {
+      majorDimension: "ROWS",
+      values: [ row ]
+    };
+    const range = "FullTallySheet!A2";
+
+    try {
+      const resp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=RAW`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        throw new Error(`writeFullTallyRow failed: HTTP ${resp.status}`);
+      }
+      const data = await resp.json();
+      console.log("writeFullTallyRow success:", data);
+      return data;
+    } catch (error) {
+      console.error("Failed writing full tally row:", error);
+      throw error;
+    }
+  }
+
+  // Helper for ignoring "The"
+  function strippedTitle(title) {
+    return title.replace(/^the\s+/i, "");
+  }
+
+  /****************************************************
+   * HELPER FUNCS FOR ID & LOGGING
+   ****************************************************/
+  function getOrCreateUserId() {
+    let userId = localStorage.getItem('pollUserId');
+    if (!userId) {
+      userId = generateRandomUserId();
+      localStorage.setItem('pollUserId', userId);
+    }
+    return userId;
+  }
+
+  function generateRandomUserId() {
+    return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+  }
+
+  async function isUserIdAlreadySubmitted(userId) {
+    const range = 'UserIDs!A:A'; 
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
+      const resp = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      if (!resp.ok) {
+        throw new Error(`Error fetching user IDs: ${resp.status} - ${resp.statusText}`);
+      }
+      const data = await resp.json();
+      const userIdList = data.values ? data.values.flat() : [];
+      return userIdList.includes(userId);
+    } catch (error) {
+      console.error('Error checking user ID:', error);
+      throw error;
+    }
+  }
+
+  async function logUserId(userId) {
+    const range = 'UserIDs!A:A';
+    const body = {
+      majorDimension: "ROWS",
+      values: [[userId]],
+    };
+
+    try {
+      const resp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=RAW`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        throw new Error(`logUserId failed: HTTP ${resp.status}`);
+      }
+      const result = await resp.json();
+      console.log("logUserId success:", result);
+      return result;
+    } catch (error) {
+      console.error("Failed logging user ID:", error);
+      throw error;
+    }
+  }
+
+}); // End DOMContentLoaded
