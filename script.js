@@ -20,129 +20,81 @@ let dragStartIndex = null;
 // Sidebar open/close state
 let sidebarOpen = false;
 
+// Google API client
+let isGapiReady = false;
+
 /**
  * Load CSV (from a published Google Sheet).
- * 
  * NOTE: The URL is a "published" link for a Google Sheet as CSV output.
- * Ensure the sheet is actually published with "Anyone with the link" 
+ * Ensure the sheet is actually published with "Anyone with the link"
  * so that Papa Parse can fetch it without requiring sign-in.
  */
-
 function loadCSVFromGoogle() {
   return new Promise((resolve, reject) => {
-    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv';
+    const url =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv";
 
-  const loadingPopup = document.getElementById('loadingPopupOverlay');
-  loadingPopup.classList.add('active');
+    const loadingPopup = document.getElementById("loadingPopupOverlay");
+    loadingPopup.classList.add("active");
 
-  const startTime = Date.now();
+    const startTime = Date.now();
 
-  Papa.parse(url, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function(results) {
-      const endTime = Date.now();
-      if (endTime - startTime < 1000) { // Hide popup if loading too fast
-        loadingPopup.style.display = 'none';
-      } else {
-        loadingPopup.classList.remove('active');
-      }
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const endTime = Date.now();
+        if (endTime - startTime < 1000) {
+          // Hide popup if loading too fast
+          loadingPopup.style.display = "none";
+        } else {
+          loadingPopup.classList.remove("active");
+        }
 
-      // "results.data" is your CSV as an array of objects
-      movies = results.data;
+        // "results.data" is your CSV as an array of objects
+        movies = results.data;
 
-      // Assign IDs if missing, init votes to 0
-      movies.forEach((movie, idx) => {
-        if (!movie.ID) movie.ID = String(idx);
+        // Assign IDs if missing, init votes to 0
+        movies.forEach((movie, idx) => {
+          if (!movie.ID) movie.ID = String(idx);
           votes[movie.ID] = 0;
         });
 
-      // Shuffle the array into "shuffledMovies"
-      shuffledMovies = [...movies];
-      for (let i = shuffledMovies.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledMovies[i], shuffledMovies[j]] = [shuffledMovies[j], shuffledMovies[i]];
-      }
+        // Shuffle the array into "shuffledMovies"
+        shuffledMovies = [...movies];
+        for (let i = shuffledMovies.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffledMovies[i], shuffledMovies[j]] = [
+            shuffledMovies[j],
+            shuffledMovies[i],
+          ];
+        }
 
-      // champion is the first
-      champion = shuffledMovies[0] || null;
-      challengerIndex = 1;
+        // champion is the first
+        champion = shuffledMovies[0] || null;
+        challengerIndex = 1;
 
-      console.log("CSV loaded, ready to start!");
+        console.log("CSV loaded, ready to start!");
         // The parse finished successfully => resolve
         resolve();
       },
-      error: function(err) {
-        loadingPopup.classList.remove('active');
+      error: function (err) {
+        loadingPopup.classList.remove("active");
         console.error("Papa Parse error:", err);
         alert("Failed to read the CSV. Check console for details.");
 
         // The parse failed => reject
         reject(err);
-      }
+      },
     });
   });
 }
 
-/* // When DOM is ready, automatically load the CSV
-document.addEventListener('DOMContentLoaded', function() {
+// When DOM is ready, automatically load the CSV
+document.addEventListener("DOMContentLoaded", function () {
   loadCSVFromGoogle();
-}); */
-
-/* --------------------------------------------------
-   WRITING RESULTS TO GOOGLE SHEETS
-   (Using Google API client, not Apps Script .gs)
--------------------------------------------------- */
-
-function initClient() {
-  // Initialize the Sheets API
-  // Make sure you have your correct API key, client ID, and the right scopes
-  gapi.client.init({
-    apiKey: 'AIzaSyDQAfQqd0amONt3fEXg7stS1lvbQhD7OWA',
-    clientId: '866522257651-645mjjbmugbiqoerc8m7ve4ear4fuec8.apps.googleusercontent.com',
-    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-    scope: "https://www.googleapis.com/auth/spreadsheets"
-  }).then(function () {
-    // Prompt user to sign in
-    gapi.auth2.getAuthInstance().signIn();
-  });
-}
-
-/**
- * Example function to write poll results to a Google Sheet
- * with ID '1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww'.
- * 
- * The user must be signed in with enough permissions (the scope).
- */
-function writePollResultsToSheet() {
-  const results = [["Movie ID", "Votes"]];
-  for (const [movieID, voteCount] of Object.entries(votes)) {
-    results.push([movieID, voteCount]);
-  }
-
-  const params = {
-    spreadsheetId: '1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww',
-    range: 'Sheet1!A1',
-    valueInputOption: 'RAW',
-  };
-
-  const valueRangeBody = {
-    majorDimension: "ROWS",
-    values: results
-  };
-
-  // This call requires your user to be authorized
-  gapi.client.sheets.spreadsheets.values.update(params, valueRangeBody)
-    .then((response) => {
-      console.log("Sheet update result:", response.result);
-      alert("Poll results successfully written!");
-    })
-    .catch((error) => {
-      console.error("Error writing to the sheet:", error);
-      alert("Failed to write poll results. Check console.");
-    });
-}
+});
 
 /* --------------------------------------------------
    STARTING THE GAME
@@ -161,11 +113,11 @@ function startGame() {
   document.getElementById("matchCounter").style.display = "block";
   document.getElementById("toggleSidebarBtn").style.display = "block";
 
-  // Apply alignment class only on mobile
-  /* if (window.innerWidth <= 600) {
-    document.querySelector(".header").classList.add("start-aligned");
-    document.getElementById("matchCounter").classList.add("start-aligned");
-  }*/
+  // Apply alignment class only on mobile if desired
+  // if (window.innerWidth <= 600) {
+  //   document.querySelector(".header").classList.add("start-aligned");
+  //   document.getElementById("matchCounter").classList.add("start-aligned");
+  // }
 
   updateMatchCounter();
   renderPair();
@@ -176,16 +128,15 @@ function startGame() {
    MATCH COUNTER
 -------------------------------------------------- */
 function updateMatchCounter() {
-  const totalMatches = (shuffledMovies.length - 1);
-  const matchesLeft = (shuffledMovies.length - challengerIndex);
-  document.getElementById("matchCounter").textContent = 
-    `Matches left: ${matchesLeft} of ${totalMatches}`;
+  const totalMatches = shuffledMovies.length - 1;
+  const matchesLeft = shuffledMovies.length - challengerIndex;
+  document.getElementById("matchCounter").textContent = `Matches left: ${matchesLeft} of ${totalMatches}`;
 
-     // Apply alignment class only on mobile
+  // Apply alignment class only on mobile
   if (window.innerWidth <= 600) {
-     const matchesLeft = (shuffledMovies.length - challengerIndex);
-     document.getElementById("matchCounter").textContent = `${matchesLeft}`;
-   }
+    const matchesLeftMobile = shuffledMovies.length - challengerIndex;
+    document.getElementById("matchCounter").textContent = `${matchesLeftMobile}`;
+  }
 }
 
 /* --------------------------------------------------
@@ -216,10 +167,8 @@ function renderPair() {
 
 /**
  * Returns HTML for a single movie card, including hover buttons.
- *
  * Instead of inline onclick="...", we give each <a> a unique class
- * to which we'll attach event listeners externally (e.g., in event-handlers.js).
- * 
+ * that we attach event listeners to externally (in event-handlers.js).
  * That way, no inline attributes are present, satisfying strict CSP.
  */
 function movieCardHTML(movie) {
@@ -296,7 +245,9 @@ function updateSidebarRankings() {
   rankingList.innerHTML = "";
 
   // Sort by vote count descending
-  const sortedArr = [...movies].sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
+  const sortedArr = [...movies].sort(
+    (a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0)
+  );
   sortedArr.forEach((m) => {
     const li = document.createElement("li");
     li.textContent = `${m.Title} - ${votes[m.ID] || 0} votes`;
@@ -308,10 +259,12 @@ function updateSidebarRankings() {
    FINALIZING TOP 5 (POPUP)
 -------------------------------------------------- */
 function finalizeTop5() {
-  const sorted = [...movies].sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
+  const sorted = [...movies].sort(
+    (a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0)
+  );
   let provisionalTop5 = sorted.slice(0, 5);
 
-  const champIndex = provisionalTop5.findIndex(m => m.ID === champion.ID);
+  const champIndex = provisionalTop5.findIndex((m) => m.ID === champion.ID);
   if (champIndex >= 0) {
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(false);
@@ -326,7 +279,9 @@ function finalizeTop5() {
     // champion auto-enters top5
     provisionalTop5.pop();
     provisionalTop5.push(champion);
-    provisionalTop5.sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
+    provisionalTop5.sort(
+      (a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0)
+    );
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(false);
   } else if (championVotes < fifthVotes) {
@@ -375,12 +330,12 @@ function faceOffHTML() {
 }
 
 function faceOffChampionWins() {
-  const idx = top5Movies.findIndex(m => m.ID === finalFifth.ID);
+  const idx = top5Movies.findIndex((m) => m.ID === finalFifth.ID);
   if (idx >= 0) {
     top5Movies.splice(idx, 1);
     top5Movies.push(finalChamp);
   }
-  top5Movies.sort((a,b)=> (votes[b.ID]||0) - (votes[a.ID]||0));
+  top5Movies.sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
   nextPopupStep();
 }
 
@@ -488,8 +443,8 @@ function handleDrop(e) {
 
 function saveFinalTop5Order() {
   console.log("Final Top 5 Order:", top5Movies);
-  alert("Your final Top 5 order is saved!");
-  // Optionally write poll results here:
-  writePollResultsToSheet();
-  closePopup();
+  // Then we want to write both top 5 + tallies:
+  // We'll call the new function from event-handlers:
+  // requestSheetsTokenAndWrite(); 
+  requestSheetsTokenAndWrite(); // new approach from event-handlers
 }

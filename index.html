@@ -6,7 +6,17 @@
   <title>Library Films – First Movie Night Poll</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600&display=swap" />
   <link rel="stylesheet" href="styles.css">
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com; style-src 'self' 'unsafe-inline'; script-src-attr 'self' https://cdn.jsdelivr.net https://apis.google.com https://github.com">
+  <meta http-equiv="Content-Security-Policy" 
+  content="
+    script-src 
+      'self' 
+      https://cdn.jsdelivr.net
+      https://apis.google.com
+      https://github.com
+      https://accounts.google.com;
+    object-src 'none';
+  ">
+
 </head>
 <body>
   <div class="header">
@@ -50,10 +60,11 @@
     <p>Loading...</p>
   </div>
 </div>
-
-  <script src="https://apis.google.com/js/api.js"></script>
+  
+  <script src="https://accounts.google.com/gsi/client"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
   <script src="script.js"></script>
   <script src="event-handlers.js"></script>
+
 </body>
 </html>
