@@ -1,174 +1,129 @@
+/********************************************
+ * script.js — Manages KOTH logic & final top5
+ ********************************************/
+
 /* --------------------------------------------------
-   GLOBAL VARIABLES & KOTH LOGIC
+   GLOBAL VARIABLES
 -------------------------------------------------- */
+// We'll store all movies from the CSV here.
 let movies = [];
+
+// Tracks champion "win" counts by ID
 const votes = {};
+
+// The current champion, next challenger index, etc.
 let champion = null;
 let challengerIndex = 0;
 let shuffledMovies = [];
 
-// For final top 5
+// We'll also build a sorted list of all movie titles
+// from the CSV if needed, e.g. for final tallies.
+let MOVIE_LIST = [];
+
+// The user's final top 5 picks after the KOTH process
 let top5Movies = [];
-// For champion face-off
+
+// For face-off logic
 let finalChamp = null;
 let finalFifth = null;
 
-// For DnD
+// For drag & drop
 let draggedItem = null;
 let dragStartIndex = null;
 
-// Sidebar open/close state
+// Tracks whether the sidebar is open
 let sidebarOpen = false;
 
 /**
- * Load CSV (from a published Google Sheet).
- * 
- * NOTE: The URL is a "published" link for a Google Sheet as CSV output.
- * Ensure the sheet is actually published with "Anyone with the link" 
- * so that Papa Parse can fetch it without requiring sign-in.
+ * loadCSVFromGoogle:
+ * Loads a published Google Sheet as CSV (via Papa Parse).
+ * Called from the start button in event-handlers.js.
  */
-
 function loadCSVFromGoogle() {
-  const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv';
+  return new Promise((resolve, reject) => {
+    const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKtP3BFvIRR8gRStw4Hf07giwQlg_WfBdj--bmXCwwUpHpASDLMzZ5oZHfWhlrb6iMJyQl6AAIupzJ/pub?output=csv";
 
-/*   const loadingPopup = document.getElementById('loadingPopupOverlay');
-  loadingPopup.classList.add('active'); */
+    const loadingPopup = document.getElementById("loadingPopupOverlay");
+    loadingPopup.classList.add("active");
 
-  const startTime = Date.now();
+    const startTime = Date.now();
 
-  Papa.parse(url, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function(results) {
-      const endTime = Date.now();
-/*       if (endTime - startTime < 1000) { // Hide popup if loading too fast
-        loadingPopup.style.display = 'none';
-      } else {
-        loadingPopup.classList.remove('active');
-      } */
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const endTime = Date.now();
+        // Hide or remove loading popup
+        if (endTime - startTime < 1000) {
+          loadingPopup.style.display = "none";
+        } else {
+          loadingPopup.classList.remove("active");
+        }
 
-      // "results.data" is your CSV as an array of objects
-      movies = results.data;
+        // Store the CSV data as an array of objects
+        movies = results.data;
 
-      // Assign IDs if missing, init votes to 0
-      movies.forEach((movie, idx) => {
-        if (!movie.ID) movie.ID = String(idx);
-        votes[movie.ID] = 0;
-      });
+        // Assign IDs if missing; init vote counts
+        movies.forEach((movie, idx) => {
+          if (!movie.ID) movie.ID = String(idx);
+          votes[movie.ID] = 0;
+        });
 
-      // Shuffle the array into "shuffledMovies"
-      shuffledMovies = [...movies];
-      for (let i = shuffledMovies.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledMovies[i], shuffledMovies[j]] = [shuffledMovies[j], shuffledMovies[i]];
-      }
+        // Build MOVIE_LIST from "Title" column
+        // (optional if you need a full alphabetical list of titles)
+        MOVIE_LIST = movies.map(row => row.Title?.trim() || "Untitled");
+        // If you want to sort ignoring leading "The ", do:
+        // MOVIE_LIST.sort(compareMoviesIgnoringLeadingThe);
 
-      // champion is the first
-      champion = shuffledMovies[0] || null;
-      challengerIndex = 1;
+        // Shuffle for champion-challenger
+        shuffledMovies = [...movies];
+        for (let i = shuffledMovies.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffledMovies[i], shuffledMovies[j]] = [shuffledMovies[j], shuffledMovies[i]];
+        }
 
-      console.log("CSV loaded, ready to start!");
-    },
-    error: function(err) {
-      loadingPopup.classList.remove('active');
-      console.error("Papa Parse error:", err);
-      alert("Failed to read the CSV. Check console for details.");
-    }
-  });
-}
+        // The first champion
+        champion = shuffledMovies[0] || null;
+        challengerIndex = 1;
 
-// When DOM is ready, automatically load the CSV
-document.addEventListener('DOMContentLoaded', function() {
-  loadCSVFromGoogle();
-});
+        console.log("CSV loaded, ready to start!");
+        console.log("MOVIE_LIST:", MOVIE_LIST);
 
-/* --------------------------------------------------
-   WRITING RESULTS TO GOOGLE SHEETS
-   (Using Google API client, not Apps Script .gs)
--------------------------------------------------- */
-
-// If you want to use the Google Sheets API via gapi client, 
-// you must do handleClientLoad -> initClient -> sign in -> then write.
-
-/*
-function handleClientLoad() {
-  // This is called once <script src="https://apis.google.com/js/api.js" onload="handleClientLoad()"> loads
-  gapi.load('client:auth2', initClient);
-}
-*/
-
-function initClient() {
-  // Initialize the Sheets API
-  // Make sure you have your correct API key, client ID, and the right scopes
-  gapi.client.init({
-    apiKey: 'AIzaSyDQAfQqd0amONt3fEXg7stS1lvbQhD7OWA',
-    clientId: '866522257651-645mjjbmugbiqoerc8m7ve4ear4fuec8.apps.googleusercontent.com',
-    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-    scope: "https://www.googleapis.com/auth/spreadsheets"
-  }).then(function () {
-    // Prompt user to sign in
-    gapi.auth2.getAuthInstance().signIn();
-  });
-}
-
-/**
- * Example function to write poll results to a Google Sheet
- * with ID '1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww'.
- * 
- * The user must be signed in with enough permissions (the scope).
- */
-function writePollResultsToSheet() {
-  const results = [["Movie ID", "Votes"]];
-  for (const [movieID, voteCount] of Object.entries(votes)) {
-    results.push([movieID, voteCount]);
-  }
-
-  const params = {
-    spreadsheetId: '1lUvFx3vsbaFL4xzchsvYlzjbtx9Jy-2EIuA3eKPo1ww',
-    range: 'Sheet1!A1',
-    valueInputOption: 'RAW',
-  };
-
-  const valueRangeBody = {
-    majorDimension: "ROWS",
-    values: results
-  };
-
-  // This call requires your user to be authorized
-  gapi.client.sheets.spreadsheets.values.update(params, valueRangeBody)
-    .then((response) => {
-      console.log("Sheet update result:", response.result);
-      alert("Poll results successfully written!");
-    })
-    .catch((error) => {
-      console.error("Error writing to the sheet:", error);
-      alert("Failed to write poll results. Check console.");
+        resolve();
+      },
+      error: function (err) {
+        loadingPopup.classList.remove("active");
+        console.error("Papa Parse error:", err);
+        alert("Failed to read the CSV. Check console for details.");
+        reject(err);
+      },
     });
+  });
 }
 
 /* --------------------------------------------------
-   STARTING THE GAME
+   START THE GAME
 -------------------------------------------------- */
+/**
+ * Called once CSV is loaded (in event-handlers)
+ * or from the code after load is done.
+ */
 function startGame() {
   if (!champion || movies.length < 2) {
     alert("Please load a CSV with at least 2 movies before starting!");
     return;
   }
 
-  // Hide start page
+  // Hide the start page
   document.getElementById("startPage").style.display = "none";
-  // Show movie container
+
+  // Show the main KOTH container
   document.querySelector(".movie-container").style.display = "flex";
+
   // Show match counter & toggle sidebar button
   document.getElementById("matchCounter").style.display = "block";
   document.getElementById("toggleSidebarBtn").style.display = "block";
-
-  // Apply alignment class only on mobile
-  /* if (window.innerWidth <= 600) {
-    document.querySelector(".header").classList.add("start-aligned");
-    document.getElementById("matchCounter").classList.add("start-aligned");
-  }*/
 
   updateMatchCounter();
   renderPair();
@@ -179,21 +134,29 @@ function startGame() {
    MATCH COUNTER
 -------------------------------------------------- */
 function updateMatchCounter() {
-  const totalMatches = (shuffledMovies.length - 1);
+  const totalMatches = shuffledMovies.length - 1;
   const matchesLeft = (shuffledMovies.length - challengerIndex);
-  document.getElementById("matchCounter").textContent = 
-    `Matches left: ${matchesLeft} of ${totalMatches}`;
 
-     // Apply alignment class only on mobile
+  const counterEl = document.getElementById("matchCounter");
+
+  // If on mobile
   if (window.innerWidth <= 600) {
-     const matchesLeft = (shuffledMovies.length - challengerIndex);
-     document.getElementById("matchCounter").textContent = `${matchesLeft}`;
-   }
+    // "74/74" style
+    counterEl.textContent = `${matchesLeft}/${totalMatches}`;
+  } else {
+    // Desktop: "Matches left: 74 of 74"
+    counterEl.textContent = `Matches left: ${matchesLeft} of ${totalMatches}`;
+  }
 }
+
 
 /* --------------------------------------------------
    KOTH RENDER & VOTING
 -------------------------------------------------- */
+/**
+ * Renders champion vs next challenger, updates sidebar, etc.
+ * If no challengers left => finalize top 5.
+ */
 function renderPair() {
   if (!champion) return;
 
@@ -213,31 +176,42 @@ function renderPair() {
   championElem.setAttribute("data-id", champion.ID);
   challengerElem.setAttribute("data-id", challenger.ID);
 
+  // NEW: highlight champion side
+  championElem.classList.add("movie", "current-champion");
+  challengerElem.classList.remove("current-champion"); // ensure only champion side has highlight
+
   updateMatchCounter();
   updateSidebarRankings();
 }
 
 /**
- * Returns HTML for a single movie card, including hover buttons.
- * 
- * We add onclick="event.stopPropagation()" to links 
- * so that clicking them won't trigger the parent's vote click.
+ * Builds the HTML for a single movie card,
+ * with poster, trailer link, RT link, etc.
  */
 function movieCardHTML(movie) {
   if (!movie) return "";
+
+  const posterSrc = posterPath(movie);
   const trailerLink = movie.Trailer || "#";
   const rtLink = movie["Rotten Tomatoes"] || "#";
-  const posterSrc = posterPath(movie);
 
   return `
     <div class="poster-container">
-      <img class="poster" src="${posterSrc}" 
-           onerror="this.onerror=null; this.src='posters/default.jpg';" />
+      <img class="poster" src="${posterSrc}" data-fallback="posters/default.jpg" />
+
+      <!-- Desktop hover buttons (hidden on mobile) -->
       <div class="hover-buttons">
-        <a href="${trailerLink}" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open('${trailerLink}', '_blank');">Watch Trailer</a>
-        <a href="${rtLink}" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open('${rtLink}', '_blank');">Rotten Tomatoes</a>
+        <a href="${trailerLink}" class="trailer-link" target="_blank">Trailer</a>
+        <a href="${rtLink}" class="rt-link" target="_blank">Rotten Tomatoes</a>
       </div>
     </div>
+
+    <!-- Mobile-only separate links -->
+    <div class="mobile-links">
+      <a href="${trailerLink}" class="trailer-link mobile-button" target="_blank">Trailer</a>
+      <a href="${rtLink}" class="rt-link mobile-button" target="_blank">Rotten Tomatoes</a>
+    </div>
+
     <div class="details">
       <h3>${movie.Title} (${movie.Year})</h3>
       <p><strong>Director:</strong> ${movie.Director}</p>
@@ -246,6 +220,10 @@ function movieCardHTML(movie) {
   `;
 }
 
+/**
+ * If user clicks champion => champion gets a "win" (votes++),
+ * move on to next challenger.
+ */
 function voteChampion() {
   if (!champion) return;
   votes[champion.ID]++;
@@ -253,6 +231,10 @@ function voteChampion() {
   renderPair();
 }
 
+/**
+ * If user clicks challenger => challenger becomes the new champion,
+ * increment that challenger’s votes, move on.
+ */
 function voteChallenger() {
   if (challengerIndex >= shuffledMovies.length) return;
   const challenger = shuffledMovies[challengerIndex];
@@ -263,8 +245,8 @@ function voteChallenger() {
 }
 
 /**
- * Simple poster path logic
- * If you have e.g. "The Town" => "the_town.jpg" in your local "posters" folder
+ * Poster path logic:
+ * e.g. "The Town" => "the_town.jpg"
  */
 function posterPath(movie) {
   const safeTitle = (movie.Title || "unknown")
@@ -278,18 +260,27 @@ function posterPath(movie) {
 /* --------------------------------------------------
    SIDEBAR & LIVE RANKINGS
 -------------------------------------------------- */
+/**
+ * Toggles the sidebar showing the current vote counts.
+ */
 function toggleSidebar() {
   sidebarOpen = !sidebarOpen;
   const sidebar = document.getElementById("sidebar");
   sidebar.classList.toggle("open", sidebarOpen);
 }
 
+/**
+ * Rebuilds the sidebar ranking:
+ * Sorts by highest votes => lowest, display Title + count.
+ */
 function updateSidebarRankings() {
   const rankingList = document.getElementById("rankingList");
   rankingList.innerHTML = "";
 
   // Sort by vote count descending
-  const sortedArr = [...movies].sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
+  const sortedArr = [...movies].sort(
+    (a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0)
+  );
   sortedArr.forEach((m) => {
     const li = document.createElement("li");
     li.textContent = `${m.Title} - ${votes[m.ID] || 0} votes`;
@@ -300,34 +291,48 @@ function updateSidebarRankings() {
 /* --------------------------------------------------
    FINALIZING TOP 5 (POPUP)
 -------------------------------------------------- */
+/**
+ * Called once all challengers exhausted.
+ * We pick top5 from the sorted "votes" data, plus champion if needed.
+ * Then show face-off or the final DnD popup.
+ */
 function finalizeTop5() {
-  const sorted = [...movies].sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
+  console.log("=== finalizeTop5 CALLED, champion is:", champion);
+  const sorted = [...movies].sort(
+    (a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0)
+  );
   let provisionalTop5 = sorted.slice(0, 5);
 
-  const champIndex = provisionalTop5.findIndex(m => m.ID === champion.ID);
+  // If champion is already in top5
+  const champIndex = provisionalTop5.findIndex((m) => m.ID === champion.ID);
   if (champIndex >= 0) {
+    console.log("Champion is already in the top 5: ", champion);
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(false);
     return;
   }
 
+  // Otherwise, see if champion should displace #5
   const championVotes = votes[champion.ID] || 0;
   const fifth = provisionalTop5[provisionalTop5.length - 1];
   const fifthVotes = votes[fifth.ID] || 0;
 
   if (championVotes > fifthVotes) {
     // champion auto-enters top5
+    console.log("Champion displaces #5 (more votes) => no face-off:", championVotes, fifthVotes);
     provisionalTop5.pop();
     provisionalTop5.push(champion);
     provisionalTop5.sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(false);
   } else if (championVotes < fifthVotes) {
+    console.log("Champion has FEWER votes => final face-off triggered:", championVotes, fifthVotes);
     finalChamp = champion;
     finalFifth = fifth;
     top5Movies = provisionalTop5;
     openPopup_faceOffOrDnd(true);
   } else {
+    console.log("Tie => final face-off triggered:", championVotes, fifthVotes);
     finalChamp = champion;
     finalFifth = fifth;
     top5Movies = provisionalTop5;
@@ -337,9 +342,14 @@ function finalizeTop5() {
 
 let popupStep = 1;
 
+/**
+ * If faceOffNeeded is true => final champion vs #5 face-off.
+ * Otherwise => show DnD reorder.
+ */
 function openPopup_faceOffOrDnd(faceOffNeeded) {
   popupStep = faceOffNeeded ? 1 : 2;
   const overlay = document.getElementById("popupOverlay");
+  
   const popup = document.getElementById("popupContent");
 
   overlay.classList.add("active");
@@ -353,14 +363,17 @@ function openPopup_faceOffOrDnd(faceOffNeeded) {
 }
 
 function faceOffHTML() {
+  console.log("faceOffHTML finalChamp:", finalChamp);
+  console.log("Champion poster path:", posterPath(finalChamp));
+  console.log("faceOffHTML finalFifth:", finalFifth);
   return `
     <h3>Final Face-off: Champion vs. #5</h3>
     <p>Select which one should enter the Top 5!</p>
-    <div class="movie-container" style="display:flex; gap:20px;">
-      <div class="movie" onclick="faceOffChampionWins()" style="cursor:pointer;">
+    <div class="faceoff-container">
+      <div class="movie face-off-champion current-champion">
         ${movieCardHTML(finalChamp)}
       </div>
-      <div class="movie" onclick="faceOffChallengerWins()" style="cursor:pointer;">
+      <div class="movie face-off-challenger">
         ${movieCardHTML(finalFifth)}
       </div>
     </div>
@@ -368,16 +381,18 @@ function faceOffHTML() {
 }
 
 function faceOffChampionWins() {
-  const idx = top5Movies.findIndex(m => m.ID === finalFifth.ID);
+  // champion displaces the #5 pick
+  const idx = top5Movies.findIndex((m) => m.ID === finalFifth.ID);
   if (idx >= 0) {
     top5Movies.splice(idx, 1);
     top5Movies.push(finalChamp);
   }
-  top5Movies.sort((a,b)=> (votes[b.ID]||0) - (votes[a.ID]||0));
+  top5Movies.sort((a, b) => (votes[b.ID] || 0) - (votes[a.ID] || 0));
   nextPopupStep();
 }
 
 function faceOffChallengerWins() {
+  // user picks #5 over champion
   nextPopupStep();
 }
 
@@ -388,11 +403,14 @@ function nextPopupStep() {
   renderTop5List();
 }
 
+/**
+ * The drag-and-drop HTML for top5 rearrangement.
+ */
 function top5DndHTML() {
   return `
     <h3>Your Top 5 (Drag & Drop to Reorder)</h3>
     <ul id="top5List"></ul>
-    <button onclick="saveFinalTop5Order()">Submit my Top 5</button>
+    <button class="submit-top5-btn">Submit my Top 5</button>
   `;
 }
 
@@ -402,8 +420,12 @@ function closePopup() {
 }
 
 /* --------------------------------------------------
-   DRAG & DROP FOR TOP 5 (LIVE REORDER)
+   DRAG & DROP FOR TOP 5
 -------------------------------------------------- */
+/**
+ * Rebuilds #top5List with the current order of top5Movies,
+ * each item draggable.
+ */
 function renderTop5List() {
   const listEl = document.getElementById("top5List");
   if (!listEl) return;
@@ -458,6 +480,7 @@ function handleDragOver(e) {
   }
 
   if (newIndex !== dragStartIndex) {
+    // reinsert the item in top5Movies
     const itemToMove = top5Movies[dragStartIndex];
     top5Movies.splice(dragStartIndex, 1);
     if (newIndex >= top5Movies.length) {
@@ -479,19 +502,16 @@ function handleDrop(e) {
   e.currentTarget.classList.remove("drag-over");
 }
 
+/**
+ * Called after user finalizes the DnD order, we:
+ *  - log final top5Movies
+ *  - then call requestSheetsTokenAndWrite() from event-handlers
+ */
 function saveFinalTop5Order() {
   console.log("Final Top 5 Order:", top5Movies);
-  alert("Your final Top 5 order is saved!");
-  // Optionally write poll results here:
-  writePollResultsToSheet();
-  closePopup();
+  if (typeof window.requestSheetsTokenAndWrite === 'function') {
+    window.requestSheetsTokenAndWrite();
+  } else {
+    console.error("requestSheetsTokenAndWrite is not defined globally.");
+  }
 }
-
-/**
- * If you want to handle loading the Google API after DOM load:
- */
-document.addEventListener('DOMContentLoaded', function() {
-  // If you want auto-auth, you can do:
-  // handleClientLoad(); // if your handleClientLoad() is uncommented
-  // Or do nothing if you only call it manually
-});

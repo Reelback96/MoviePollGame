@@ -1,255 +1,414 @@
-<style>
-  /* ----------------------------------------------------------
-     GLOBAL & FONT (Scaled Up ~30%)
-  ---------------------------------------------------------- */
-  html {
-    font-size: 130%; /* Scale base font size by ~30% */
-  }
-  body {
-    margin: 0;
-    padding: 0;
-    background: #f4f4f4;
-    color: #333;
-    font-family: 'Proxima Nova','Source Sans Pro',sans-serif;
-  }
-  h1, h2, h3, h4, h5 {
-    margin: 0;
-    font-weight: 600;
-  }
-  a {
-    color: #007BFF;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-  button {
-    font-family: inherit;
-    padding: 10px 16px; /* slightly larger padding */
-    border: none;
-    background: #007BFF;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s;
-    font-size: 1rem; /* bigger text in buttons */
-  }
-  button:hover {
-    background: #005bbf;
-  }
+/********************************************
+ * GLOBAL & FONT (Scaled Up ~30%)
+ ********************************************/
+ html {
+  font-size: 130%; /* base scaling */
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: #f4f4f4;
+  color: #333;
+  font-family: 'Proxima Nova','Source Sans Pro',sans-serif;
+}
+h1, h2, h3, h4, h5 {
+  margin: 0;
+  font-weight: 600;
+}
+a {
+  color: #007BFF;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+button {
+  font-family: inherit;
+  padding: 10px 16px;
+  border: none;
+  background: #007BFF;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.3s;
+  font-size: 1rem;
+}
+button:hover {
+  background: #005bbf;
+}
 
-  /* ----------------------------------------------------------
-     HEADER / LOGO
-  ---------------------------------------------------------- */
-  .header {
-    text-align: center;
-    padding: 20px 0 0 0; /* bigger padding */
-    background: #fff;
-  }
-  .header img {
-    max-width: 390px; /* scaled up ~30% from 300px */
-    height: auto;
-    display: block;
-    margin: 0 auto; /* Center the image if needed */
-  }
-  .header h2 {
-    margin-top: 10px;
-    font-size: 1.4rem; /* bigger than 1.2rem */
-    color: #555;
-    text-align: center;
-  }
+/********************************************
+ * HEADER / LOGO
+ ********************************************/
+.header {
+  text-align: center;
+  padding: 20px 0 0 0;
+  background: #fff;
+}
+.header img {
+  max-width: 390px; 
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.header h2 {
+  margin-top: 10px;
+  font-size: 1.4rem;
+  color: #555;
+  text-align: center;
+}
+
+/********************************************
+ * START PAGE
+ ********************************************/
+#startPage {
+  text-align: center;
+  padding: 50px 20px;
+}
+#startPage h2 {
+  font-size: 2.3rem;
+  margin-bottom: 15px;
+}
+#instructionImage {
+  max-width: 520px;
+  margin: 30px auto;
+  display: block;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+}
+#startPage p {
+  font-size: 1.4rem;
+  line-height: 1.6;
+  max-width: 900px;
+  margin: 20px auto;
+  color: #444;
+  text-align: center;
+}
+
+/********************************************
+ * MOVIE CONTAINER (KOTH)
+ ********************************************/
+.movie-container {
+  display: none;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 30px;
+  gap: 30px;
+}
+/* Normal 2px border so we can see blue on hover, plus champion ring outside */
+.movie {
+  position: relative;
+  width: 280px;
+  background: #fff;
+  border: 2px solid #ccc; /* base border */
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.movie:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  border-color: #007BFF; /* turns blue on hover */
+}
+/* Champion: gold ring outside the normal 2px border */
+.movie.current-champion {
+  box-shadow: 0 0 0 4px gold; 
+}
+.poster {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.details {
+  padding: 15px;
+}
+.details h3 {
+  font-size: 1.2rem;
+  margin: 0 0 8px 0;
+}
+
+/********************************************
+ * FACEOFF CONTAINER (KOTH)
+ ********************************************/
+
+/* The final face-off container */
+.faceoff-container {
+  /* We want them side by side */
+  display: flex;
+  /* Center horizontally */
+  justify-content: center;
+  /* Some space between them */
+  gap: 30px;
+  /* A little vertical margin */
+  margin: 20px 0;
+}
+
+/* face-off-champion */
+.faceoff-champion {
+  /* The champion should be a bit bigger */
+  transform: scale(1.1);
+  /* A little more space around it */
+  margin: 0 15px;
+  /* A little shadow */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  /* A little border */
+  border: 2px solid #007BFF;
+  /* A little border radius */
+  border-radius: 6px;
+  /* A little padding */
+  padding: 10px;
+  /* A little transition */
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+
+/********************************************
+ * HOVER BUTTONS (DESKTOP)
+ ********************************************/
+.poster-container {
+  position: relative;
+  overflow: hidden;
+}
+.hover-buttons {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #007BFF;
+  opacity: 0;
+  transition: opacity 0.3s;
+  padding: 5px;
+}
+/* Inside your main CSS, perhaps right after .hover-buttons { } */
+.hover-buttons a {
+  background: #007BFF;     /* blue background */
+  color: #fff;            /* white text */
+  padding: 6px 10px;
+  text-decoration: none;  
+  border-radius: 3px;
+  margin: 0 4px;          /* optional little spacing between buttons */
+  transition: background 0.2s;
+}
+
+.hover-buttons a:hover {
+  background: #005bbf;    /* darker blue hover effect */
+}
+.movie:hover .hover-buttons {
+  opacity: 1;
+}
+
+/********************************************
+ * MATCH COUNTER
+ ********************************************/
+#matchCounter {
+  text-align: center;
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 15px;
+  display: none;
+}
+
+/********************************************
+ * RANKINGS SIDEBAR
+ ********************************************/
+#toggleSidebarBtn {
+  display: none; 
+  position: absolute;
+  left: 30px;
+  top: 30px;
+  z-index: 10;
+  font-size: 1rem;
+}
+#sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: -400px;
+  width: 350px;
+  background: #fff;
+  border-right: 2px solid #ccc;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  padding: 20px;
+  transition: left 0.4s;
+  z-index: 999;
+  overflow-y: auto;
+}
+#sidebar.open {
+  left: 0;
+}
+#sidebar h3 {
+  margin-top: 0;
+  font-size: 1.4rem;
+}
+#sidebar ul {
+  padding-left: 25px;
+  font-size: 1.1rem;
+}
+#hideSidebarBtn {
+  margin-bottom: 10px;
+  background: #cc0000; 
+}
+
+/********************************************
+ * OVERLAY & POPUP
+ ********************************************/
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 10000;
+}
+.overlay.active {
+  display: block;
+}
+.popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 550px;
+  max-width: 95vw;
+  background: #fff;
+  border-radius: 6px;
+  padding: 30px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/********************************************
+ * DRAG & DROP LIST (TOP 5)
+ ********************************************/
+#top5List {
+  list-style-type: none;
+  padding: 0;
+  margin: 20px 0;
+  font-size: 1.1rem;
+}
+#top5List li {
+  background: #f9f9f9;
+  margin: 8px 0;
+  padding: 14px;
+  border: 2px solid #ccc;
+  cursor: move;
+  transition: background 0.2s;
+}
+#top5List li.drag-over {
+  border-color: #007BFF;
+  background: #e0f1ff;
+}
+#top5List li.dragging {
+  opacity: 0.2;
+}
+
+/********************************************
+ * NEW: Top Pick Container & Headline Styling
+ ********************************************/
+ .top-pick-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.top-pick-container .headline h3 {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* Ensure top pick movie card is centered */
+.movie.top-pick {
+  margin: 0 auto;
+  border: 4px solid #28a745; /* A little border */
+  /* A little border radius */
+  border-radius: 6px;
+  /* Optionally add padding, border, etc., if desired */
+
   
-  /* ----------------------------------------------------------
-     START PAGE
-  ---------------------------------------------------------- */
-  #startPage {
-    text-align: center;
-    padding: 50px 20px; /* bigger padding */
-  }
-  #startPage h2 {
-    font-size: 2.3rem; /* scaled up from 2rem */
-    margin-bottom: 15px;
-  }
-  #instructionImage {
-    max-width: 520px; /* bigger placeholder */
-    margin: 30px auto;
-    display: block;
-    border: 2px solid #ccc;
-    border-radius: 6px;
-  }
-  #startPage p {
-    font-size: 1.4rem; /* bigger text */
-    line-height: 1.6;
-    max-width: 900px; /* wider to accommodate bigger text */
-    margin: 20px auto;
-    color: #444;
-    text-align: center;
-  }
+}
 
-  /* ----------------------------------------------------------
-     MOVIE CONTAINER (KOTH) – scaled up
-  ---------------------------------------------------------- */
-  .movie-container {
-    display: none;
-    justify-content: center;
-    align-items: flex-start;
-    margin: 30px; /* bigger margin */
-    gap: 30px;
-  }
-  .movie {
-    position: relative;
-    width: 280px; /* scaled up from 220px */
-    background: #fff;
-    border: 2px solid #ccc;
-    border-radius: 6px;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .movie:hover {
-    transform: scale(1.03);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    border-color: #007BFF;
-  }
-  .poster {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  .details {
-    padding: 15px; /* bigger padding */
-  }
-  .details h3 {
-    font-size: 1.2rem;
-    margin: 0 0 8px 0;
-  }
+/********************************************
+ * AFTER WRITE BUTTONS STYLING
+ ********************************************/
+#postSubmissionButtons {
+  text-align: center;
+  margin-top: 20px;
+}
 
-  /* HOVER BUTTONS ON POSTER */
-  .poster-container {
-    position: relative;
-    overflow: hidden;
-  }
-  .hover-buttons {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
+#postSubmissionButtons button {
+  margin: 0 5px;
+  background: #28a745;
+  /* Ensure buttons are not enclosed in a grey box */
+  border: none;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#postSubmissionButtons button:hover {
+  background: #218838;
+}
+
+/* Retain existing media queries and other styles as needed */
+
+/********************************************
+ * MOBILE-ONLY: Hide .hover-buttons, 
+ * Show .mobile-links below poster (centered)
+ ********************************************/
+/* By default, .mobile-links and .mobile-button are hidden on desktop */
+.mobile-links {
+  display: none;
+}
+.trailer-link.mobile-button,
+.rt-link.mobile-button {
+  display: none;
+}
+
+/* On mobile => show them, hide .hover-buttons,
+   and adjust the matchCounter & toggling logic */
+@media (max-width: 600px) {
+  /* #matchCounter: displayed as vertical flex on mobile */
+  #matchCounter {
+    display: flex !important;
+    flex-direction: column;
     align-items: center;
-    background: rgba(0,0,0,0.6);
-    opacity: 0;
-    transition: opacity 0.3s;
-    padding: 5px;
   }
-  .movie:hover .hover-buttons {
-    opacity: 1;
+  /* 'Show Rankings' button below matchCounter */
+  #toggleSidebarBtn {
+    position: static;
+    margin-top: 10px;
+    display: inline-block !important; 
   }
-  .hover-buttons a {
+
+  /* Hide desktop hover-based overlay */
+  .hover-buttons {
+    display: none !important;
+  }
+
+  /* Show mobile links block below the poster, centered, small gap */
+  .mobile-links {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  /* Now show the actual "mobile-button" links */
+  .trailer-link.mobile-button,
+  .rt-link.mobile-button {
+    display: inline-block;
     background: #007BFF;
     color: #fff;
     padding: 6px 10px;
     text-decoration: none;
     border-radius: 3px;
     font-size: 1rem;
+    margin-top: 5px;
   }
+}
 
-  /* MATCH COUNTER */
-  #matchCounter {
-    text-align: center;
-    font-size: 1.3rem;
-    color: #333;
-    margin-bottom: 15px;
-    display: none;
-  }
-
-  /* ----------------------------------------------------------
-     SIDEBAR RANKINGS (ON THE LEFT) – hidden further left
-  ---------------------------------------------------------- */
-  #toggleSidebarBtn {
-    display: none; 
-    position: absolute;
-    left: 30px;
-    top: 30px;
-    z-index: 10;
-    font-size: 1rem;
-  }
-  #sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: -400px; /* was -300, move it further to fully hide */
-    width: 350px; /* scaled up from 300px */
-    background: #fff;
-    border-right: 2px solid #ccc;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    padding: 20px;
-    transition: left 0.4s;
-    z-index: 999;
-    overflow-y: auto;
-  }
-  #sidebar.open {
-    left: 0;
-  }
-  #sidebar h3 {
-    margin-top: 0;
-    font-size: 1.4rem;
-  }
-  #sidebar ul {
-    padding-left: 25px;
-    font-size: 1.1rem;
-  }
-  #hideSidebarBtn {
-    margin-bottom: 10px;
-    background: #cc0000; 
-  }
-
-  /* ----------------------------------------------------------
-     OVERLAY & POPUP FOR FACE-OFF & DND
-  ---------------------------------------------------------- */
-  .overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 10000;
-  }
-  .overlay.active {
-    display: block;
-  }
-  .popup {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 550px; /* bigger from 450 */
-    max-width: 95vw;
-    background: #fff;
-    border-radius: 6px;
-    padding: 30px; /* bigger padding */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  }
-
-  /* DRAG & DROP LIST – scaled up fonts */
-  #top5List {
-    list-style-type: none;
-    padding: 0;
-    margin: 20px 0;
-    font-size: 1.1rem;
-  }
-  #top5List li {
-    background: #f9f9f9;
-    margin: 8px 0;
-    padding: 14px;
-    border: 2px solid #ccc;
-    cursor: move;
-    transition: background 0.2s;
-  }
-  #top5List li.drag-over {
-    border-color: #007BFF;
-    background: #e0f1ff;
-  }
-  #top5List li.dragging {
-    opacity: 0.2;
-  }
-
-</style>
